@@ -1,4 +1,4 @@
-﻿#include "GameScene.h"
+#include "GameScene.h"
 #include "KamataEngine.h"
 #include <Windows.h>
 using namespace KamataEngine;
@@ -45,6 +45,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 		dxCommon->PostDraw();
 #pragma endregion
+
+		if (Input::GetInstance()->TriggerKey(DIK_ESCAPE)) {
+			break;
+		}
 	}
 
 #pragma region 後処理

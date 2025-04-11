@@ -34,9 +34,21 @@ void GameScene::Update() {
 		}
 	}
 
+
+	#ifdef _DEBUG
 	ImGui::Begin("Debug");
 	ImGui::Text("flag = %d", Audio::GetInstance()->IsPlaying(soundDataHandleStoper_));
 	ImGui::End();
+
+	ImGui::ShowDemoWindow();
+	
+	ImGui::Begin("Debug2");
+	ImGui::Text("Kamata Tarou %d.%d.%d", 2050, 12, 31);
+	ImGui::InputFloat3("InputFloat3", inputFloat3);
+	ImGui::SliderFloat3("SliderFloat3", inputFloat3, 0.0f, 1.0f);
+	ImGui::End();
+
+	#endif
 }
 
 void GameScene::Draw() {

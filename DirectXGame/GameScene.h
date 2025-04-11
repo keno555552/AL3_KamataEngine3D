@@ -32,4 +32,7 @@ private:
 	/// サウンドデータハンドル
 	int soundDataHandle_ = 0;
 	int soundDataHandleStoper_ = 0;
+
+	/// ImGui Test用
+	float inputFloat3[3] = {};
 };
