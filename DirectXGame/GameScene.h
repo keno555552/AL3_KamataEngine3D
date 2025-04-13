@@ -28,6 +28,8 @@ private:
 	WorldTransform worldTransform_;
 	/// カメラ
 	Camera camera_;
+	/// デバックカメラ
+	DebugCamera* debugCamera_ = nullptr;
 
 	/// サウンドデータハンドル
 	int soundDataHandle_ = 0;

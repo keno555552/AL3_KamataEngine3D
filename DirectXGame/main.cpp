@@ -43,6 +43,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		/// ImGui描画
 		imguiManager->Draw();
 
+		/// 軸表示の描画
+		AxisIndicator::GetInstance()->Draw();
+
 		dxCommon->PostDraw();
 #pragma endregion
 
