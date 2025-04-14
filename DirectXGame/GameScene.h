@@ -1,6 +1,7 @@
 #pragma once
 #include "KamataEngine.h"
 using namespace KamataEngine;
+#include "Player.h"
 
 class GameScene {
 public:
@@ -19,8 +20,6 @@ private:
 	int textureHandle_ = 0;
 
 private:
-	/// スプライト
-	Sprite* sprite_ = nullptr;
 
 	/// 3Dモテル
 	Model* model_ = nullptr;
@@ -37,4 +36,9 @@ private:
 
 	/// ImGui Test用
 	float inputFloat3[3] = {};
+
+private:
+
+	/// 自キャラ
+	Player* player_ = nullptr;
 };
