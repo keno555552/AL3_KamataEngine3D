@@ -20,7 +20,8 @@ public:
 
 private:
 	/// テキスチャーハンドル
-	uint32_t textureHandle_ = 0u;
+	uint32_t playerTextureHandle_ = 0u;
+	uint32_t boxTextureHandle_ = 0u;
 
 private:
 
@@ -42,5 +43,5 @@ private:
 	Player* player_ = nullptr;
 
 	///　ボックス
-	std::vector<WorldTransform*> worldTransformBlocks_;
+	std::vector<std::vector<WorldTransform*>> worldTransformBlocks_;
 };

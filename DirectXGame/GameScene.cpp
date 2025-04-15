@@ -15,7 +15,8 @@ Matrix4x4 Mult(const Matrix4x4& m1, const Matrix4x4& m2) {
 
 void GameScene::Initialize() {
 #pragma region System
-	textureHandle_ = TextureManager::Load("obj.png");
+	playerTextureHandle_ = TextureManager::Load("obj.png");
+	boxTextureHandle_ = TextureManager::Load("cube/cube.jpg");
 	model_ = Model::Create();
 	modelBlock_ = Model::Create();
 	/// ワールドトランスフォームの初期化
@@ -37,22 +38,39 @@ void GameScene::Initialize() {
 	/// Player関連
 	// 自キャラの生成、初期化
 	player_ = new Player();
-	player_->Initialize(model_, textureHandle_, &debugCamera_->GetCamera());
+	player_->Initialize(model_, playerTextureHandle_, &debugCamera_->GetCamera());
 
 	/// ボックス生成
 	// 要素数
+	const uint32_t kNumBlockVertical = 10;
 	const uint32_t kNumBlockHorizontal = 20;
 	// ブロック1個分の横幅
 	const float kBlockWidth = 2.0f;
-	// 　要素数を変更する
-	worldTransformBlocks_.resize(kNumBlockHorizontal);
-
+	const float kBlockHeight = 2.0f;
+	// 要素数を変更する
+	// 列数を設定(縦方向のブロック数)
+	worldTransformBlocks_.resize(kNumBlockVertical);
+	for (int i = 0; i < kNumBlockVertical; i++) {
+		// 列数を設定(横方向のブロック数)
+		worldTransformBlocks_[i].resize(kNumBlockHorizontal);
+	}
 	// いざボックス生成
-	for (int i = 0; i < kNumBlockHorizontal; i++) {
-		worldTransformBlocks_[i] = new WorldTransform();
-		worldTransformBlocks_[i]->Initialize();
-		worldTransformBlocks_[i]->translation_.x = kBlockWidth * i;
-		worldTransformBlocks_[i]->translation_.y = 0.0f;
+	for (int i = 0; i < kNumBlockVertical; i++) {
+		for (int j = 0; j < kNumBlockHorizontal; j++) {
+			worldTransformBlocks_[i][j] = new WorldTransform();
+			worldTransformBlocks_[i][j]->Initialize();
+			worldTransformBlocks_[i][j]->translation_.x = kBlockWidth * j;
+			worldTransformBlocks_[i][j]->translation_.y = kBlockHeight * i;
+			if (i % 2 == 0) {
+				if (j % 2 == 1) {
+					worldTransformBlocks_[i][j] = nullptr;
+				} 
+			} else {
+				if (j % 2 == 0) {
+					worldTransformBlocks_[i][j] = nullptr;
+				} 
+			}
+		}
 	}
 
 #pragma endregion
@@ -65,8 +83,10 @@ GameScene::~GameScene() {
 #pragma region GameObject
 	delete player_, player_ = nullptr;
 
-	for (WorldTransform* worldTransformBlock : worldTransformBlocks_) {
-		delete worldTransformBlock;
+	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
+		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
+			delete worldTransformBlock;
+		}
 	}
 	worldTransformBlocks_.clear();
 
@@ -90,45 +110,66 @@ void GameScene::Update() {
 	player_->Update();
 
 	/// ボックスの更新
-	for (WorldTransform* worldTransformBlock : worldTransformBlocks_) {
+	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
+		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
+			if (!worldTransformBlock) {
+				continue;
+			}
 
-		Matrix4x4 matScale = {
-		    worldTransformBlock->scale_.x, 0.0f, 0.0f, 0.0f,
-			0.0f, worldTransformBlock->scale_.y, 0.0f, 0.0f,
-			0.0f, 0.0f, worldTransformBlock->scale_.z, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f};
+			Matrix4x4 matScale = {
+			    worldTransformBlock->scale_.x, 0.0f, 0.0f, 0.0f, 0.0f, worldTransformBlock->scale_.y, 0.0f, 0.0f, 0.0f, 0.0f, worldTransformBlock->scale_.z, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
-		Matrix4x4 rX = {
-		    1.0f,0.0f,0.0f,0.0f,
-		    0.0f,cosf(worldTransformBlock->rotation_.x),sinf(worldTransformBlock->rotation_.x),0.0f,
-		    0.0f,-sinf(worldTransformBlock->rotation_.x),cosf(worldTransformBlock->rotation_.x),0.0f,
-		    0.0f,0.0f,0.0f,1.0f};
+			Matrix4x4 rX = {
+			    1.0f,
+			    0.0f,
+			    0.0f,
+			    0.0f,
+			    0.0f,
+			    cosf(worldTransformBlock->rotation_.x),
+			    sinf(worldTransformBlock->rotation_.x),
+			    0.0f,
+			    0.0f,
+			    -sinf(worldTransformBlock->rotation_.x),
+			    cosf(worldTransformBlock->rotation_.x),
+			    0.0f,
+			    0.0f,
+			    0.0f,
+			    0.0f,
+			    1.0f};
 
-		Matrix4x4 rY = {
-			cosf(worldTransformBlock->rotation_.y), 0.0f, -sinf(worldTransformBlock->rotation_.y), 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f,
-			sinf(worldTransformBlock->rotation_.y), 0.0f, cosf(worldTransformBlock->rotation_.y), 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f};
+			Matrix4x4 rY = {cosf(worldTransformBlock->rotation_.y), 0.0f, -sinf(worldTransformBlock->rotation_.y), 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+			                sinf(worldTransformBlock->rotation_.y), 0.0f, cosf(worldTransformBlock->rotation_.y),  0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
-		Matrix4x4 rZ = {
-			cosf(worldTransformBlock->rotation_.z), sinf(worldTransformBlock->rotation_.z), 0.0f, 0.0f,
-			-sinf(worldTransformBlock->rotation_.z), cosf(worldTransformBlock->rotation_.z), 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f};
+			Matrix4x4 rZ = {
+			    cosf(worldTransformBlock->rotation_.z),
+			    sinf(worldTransformBlock->rotation_.z),
+			    0.0f,
+			    0.0f,
+			    -sinf(worldTransformBlock->rotation_.z),
+			    cosf(worldTransformBlock->rotation_.z),
+			    0.0f,
+			    0.0f,
+			    0.0f,
+			    0.0f,
+			    1.0f,
+			    0.0f,
+			    0.0f,
+			    0.0f,
+			    0.0f,
+			    1.0f};
 
-		Matrix4x4 rXYZ = Mult(rX, Mult(rY, rZ));
+			Matrix4x4 rXYZ = Mult(rX, Mult(rY, rZ));
 
-		Matrix4x4 matTran{1.0f, 0.0f, 0.0f, 0.0f,
-						  0.0f, 1.0f, 0.0f, 0.0f,
-						  0.0f, 0.0f, 1.0f, 0.0f, 
-						  worldTransformBlock->translation_.x, worldTransformBlock->translation_.y, worldTransformBlock->translation_.z, 1.0f};
+			Matrix4x4 matTran{
+			    1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, worldTransformBlock->translation_.x, worldTransformBlock->translation_.y, worldTransformBlock->translation_.z,
+			    1.0f};
 
+			// アフィン変換
+			worldTransformBlock->matWorld_ = Mult(matScale, Mult(rXYZ, matTran));
 
-		// アフィン変換
-		worldTransformBlock->matWorld_ = Mult(matScale, Mult(rXYZ, matTran));
-
-		// 定数バッファに転送
-		worldTransformBlock->TransferMatrix();
+			// 定数バッファに転送
+			worldTransformBlock->TransferMatrix();
+		}
 	}
 
 #pragma endregion
@@ -160,9 +201,14 @@ void GameScene::Render() {
 	// player_->Render();
 
 	/// 　ボックスの描画
-	for (WorldTransform* worldTransformBlock : worldTransformBlocks_) {
-		// モデルの描画
-		modelBlock_->Draw(*worldTransformBlock, debugCamera_->GetCamera(), textureHandle_);
+	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
+		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
+			if (!worldTransformBlock) {
+				continue;
+			}
+			// モデルの描画
+			modelBlock_->Draw(*worldTransformBlock, debugCamera_->GetCamera(), boxTextureHandle_);
+		}
 	}
 
 	/// 後処理
