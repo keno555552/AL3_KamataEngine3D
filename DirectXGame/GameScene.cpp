@@ -1,11 +1,9 @@
 #include "GameScene.h"
-// #include "ImGuiManager.h"
-// #include "PrimitiveDrawer.h"
 
 void GameScene::Initialize() {
 #pragma region System
 	textureHandle_ = TextureManager::Load("obj.png");
-	model_ = Model::Create();
+	model_= Model::Create();
 	/// ワールドトランスフォームの初期化
 	worldTransform_.Initialize();
 	/// カメラの初期化
@@ -25,9 +23,10 @@ void GameScene::Initialize() {
 	/// Player関連
 	// 自キャラの生成、初期化
 	player_ = new Player();
-	player_->Initialize(model_, textureHandle_,&debugCamera_->GetCamera());
+	player_->Initialize(model_, textureHandle_, &debugCamera_->GetCamera());
 
 #pragma endregion
+
 }
 
 GameScene::~GameScene() {
@@ -35,7 +34,7 @@ GameScene::~GameScene() {
 	delete debugCamera_, debugCamera_ = nullptr;
 
 #pragma region GameObject
-	delete player_, player_ = nullptr;
+	delete player_,player_ = nullptr;
 #pragma endregion
 }
 
@@ -73,27 +72,31 @@ void GameScene::Update() {
 #endif
 }
 
-void GameScene::Draw() {
+void GameScene::Render() {
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
 #pragma region 3Dモデル描画
 	/// 前処理
 	Model::PreDraw(dxCommon->GetCommandList());
 
+	/// 自キャラの描画
+	player_->Render();
 	//model_->Draw(worldTransform_, debugCamera_->GetCamera(), textureHandle_);
+
+	/// 後処理
+	Model::PostDraw();
+#pragma endregion
+
 	PrimitiveDrawer::GetInstance()->DrawLine3d({}, {0, 10, 0}, {1.0f, 0.0f, 0.0f, 1.0f});
 	for (int i = 0; i <= 10; i++) {
 		PrimitiveDrawer::GetInstance()->DrawLine3d({float(-5.0f + i), 0, -5}, {float(-5.0f + i), 0, +5}, {1.0f, 0.0f, 0.0f, 1.0f});
 		PrimitiveDrawer::GetInstance()->DrawLine3d({-5, 0, float(-5.0f + i)}, {+5, 0, float(-5.0f + i)}, {0.0f, 0.0f, 1.0f, 1.0f});
 	}
 
-	// 自キャラの描画
-	player_->Draw();
-
-	/// 後処理
-	Model::PostDraw();
-#pragma endregion
-
 #pragma region 2D描画
+	//// 2D描画の前処理
+	//Sprite::PreDraw(dxCommon->GetCommandList());
+	//// 2D描画の後処理
+	//Sprite::PostDraw();
 #pragma endregion
 }

@@ -18,6 +18,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 #pragma endregion
 
+#pragma region Mainループ
 	while (true) {
 
 #pragma region ゲーム処理
@@ -27,6 +28,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		if (Update()) {
 			break;
 		}
+
 		/// ゲームシーンの更新
 		gameScene->Update();
 
@@ -38,7 +40,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		dxCommon->PreDraw();
 
 		/// ゲームシーンの描画
-		gameScene->Draw();
+		gameScene->Render();
 
 		/// ImGui描画
 		imguiManager->Draw();
@@ -53,6 +55,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			break;
 		}
 	}
+#pragma endregion
 
 #pragma region 後処理
 

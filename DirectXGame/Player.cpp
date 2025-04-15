@@ -1,23 +1,24 @@
 #include "Player.h"
 
-
-void Player::Initialize(Model* modelIn, uint32_t textureHandle, const Camera* camera) { 
-	assert(modelIn);
-	assert(camera);
-	model_ = modelIn;//借り
-	textureHandle_ = textureHandle;
+void Player::Initialize(Model* model, uint32_t textureHandle, const Camera* camera) {
+	/// モデルの設定
+	model_ = model;
+	/// ワールドトランスフォームの初期化
 	worldTransform_.Initialize();
-	camera_ = camera;//借り
+	/// カメラの設定
+	camera_ = camera;
+	/// テクスチャーハンドルの設定
+	textureHandle_ = textureHandle;
 }
 
-void Player::Update() {
-
-	// 行列を定数バッファに転送
+void Player::Update() { 
 	worldTransform_.TransferMatrix();
-
 }
 
-void Player::Draw() {
-	// モデルの描画
+void Player::Render() {
+	assert(camera_ != nullptr);
+	assert(model_ != nullptr);
+	assert(textureHandle_ != 0u);
+	/// モデルの描画
 	model_->Draw(worldTransform_, *camera_, textureHandle_);
 }

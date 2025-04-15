@@ -13,11 +13,11 @@ public:
 	void Update();
 
 	/// 描画
-	void Draw();
+	void Render();
 
 private:
 	/// テキスチャーハンドル
-	int textureHandle_ = 0;
+	uint32_t textureHandle_ = 0u;
 
 private:
 
@@ -30,12 +30,8 @@ private:
 	/// デバックカメラ
 	DebugCamera* debugCamera_ = nullptr;
 
-	/// サウンドデータハンドル
-	int soundDataHandle_ = 0;
-	int soundDataHandleStoper_ = 0;
-
-	/// ImGui Test用
-	float inputFloat3[3] = {};
+	///// ImGui Test用
+	//float inputFloat3[3] = {};
 
 private:
 
