@@ -1,7 +1,10 @@
 #pragma once
 #include "KamataEngine.h"
 using namespace KamataEngine;
+#include <vector>
 #include "Player.h"
+
+Matrix4x4 Mult(const Matrix4x4& m1, const Matrix4x4& m2);
 
 class GameScene {
 public:
@@ -23,6 +26,8 @@ private:
 
 	/// 3Dモテル
 	Model* model_ = nullptr;
+	/// BOXモデル
+	Model* modelBlock_ = nullptr;
 	/// ワールドトランスフォーム
 	WorldTransform worldTransform_;
 	/// カメラ
@@ -30,11 +35,12 @@ private:
 	/// デバックカメラ
 	DebugCamera* debugCamera_ = nullptr;
 
-	///// ImGui Test用
-	//float inputFloat3[3] = {};
 
 private:
 
 	/// 自キャラ
 	Player* player_ = nullptr;
+
+	///　ボックス
+	std::vector<WorldTransform*> worldTransformBlocks_;
 };
