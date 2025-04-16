@@ -12,6 +12,31 @@ Matrix4x4 Mult(const Matrix4x4& m1, const Matrix4x4& m2) {
 	return resuit;
 }
 
+void GameScene::GenerateBlocks() {
+	/// ボックス生成
+	// 要素数
+	uint32_t kNumBlockVertical = mapChipField_->GetNumBlockVirtical();
+	uint32_t kNumBlockHorizontal = mapChipField_->GetNumBlockHorizontal();
+
+	// 要素数を変更する
+	// 列数を設定(縦方向のブロック数)
+	worldTransformBlocks_.resize(kNumBlockVertical);
+	for (uint32_t i = 0; i < kNumBlockVertical; i++) {
+		// 列数を設定(横方向のブロック数)
+		worldTransformBlocks_[i].resize(kNumBlockHorizontal);
+	}
+	// いざボックス生成
+	for (uint32_t i = 0; i < kNumBlockVertical; i++) {
+		for (uint32_t j = 0; j < kNumBlockHorizontal; j++) {
+			if (mapChipField_->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
+				WorldTransform* worldTransform = new WorldTransform();
+				worldTransform->Initialize();
+				worldTransformBlocks_[i][j] = worldTransform;
+				worldTransformBlocks_[i][j]->translation_ = mapChipField_->GetMapChipPositionByIndex(j, i);
+			}
+		}
+	}
+}
 
 void GameScene::Initialize() {
 #pragma region System
@@ -44,38 +69,12 @@ void GameScene::Initialize() {
 	player_ = new Player();
 	player_->Initialize(model_, playerTextureHandle_, &debugCamera_->GetCamera());
 
-	/// ボックス生成
-	// 要素数
-	const uint32_t kNumBlockVertical = 10;
-	const uint32_t kNumBlockHorizontal = 20;
-	// ブロック1個分の横幅
-	const float kBlockWidth = 2.0f;
-	const float kBlockHeight = 2.0f;
-	// 要素数を変更する
-	// 列数を設定(縦方向のブロック数)
-	worldTransformBlocks_.resize(kNumBlockVertical);
-	for (int i = 0; i < kNumBlockVertical; i++) {
-		// 列数を設定(横方向のブロック数)
-		worldTransformBlocks_[i].resize(kNumBlockHorizontal);
-	}
-	// いざボックス生成
-	for (int i = 0; i < kNumBlockVertical; i++) {
-		for (int j = 0; j < kNumBlockHorizontal; j++) {
-			worldTransformBlocks_[i][j] = new WorldTransform();
-			worldTransformBlocks_[i][j]->Initialize();
-			worldTransformBlocks_[i][j]->translation_.x = kBlockWidth * j;
-			worldTransformBlocks_[i][j]->translation_.y = kBlockHeight * i;
-			if (i % 2 == 0) {
-				if (j % 2 == 1) {
-					worldTransformBlocks_[i][j] = nullptr;
-				} 
-			} else {
-				if (j % 2 == 0) {
-					worldTransformBlocks_[i][j] = nullptr;
-				} 
-			}
-		}
-	}
+	/// マップチップの生成
+	mapChipField_ = new MapChipField();
+	mapChipField_->LoadMapChipCsv("Resources/stage/blocks.csv");
+
+	/// マップチップの初期化
+	GenerateBlocks();
 
 #pragma endregion
 }
@@ -86,6 +85,8 @@ GameScene::~GameScene() {
 
 #pragma region GameObject
 	delete player_, player_ = nullptr;
+
+	delete mapChipField_, mapChipField_ = nullptr;
 
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {

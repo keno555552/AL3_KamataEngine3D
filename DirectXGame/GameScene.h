@@ -4,6 +4,7 @@ using namespace KamataEngine;
 #include <vector>
 #include "Player.h"
 #include "Skydome.h"
+#include "MapChipField.h"
 
 Matrix4x4 Mult(const Matrix4x4& m1, const Matrix4x4& m2);
 
@@ -20,11 +21,13 @@ public:
 	void Render();
 
 private:
+
+	void GenerateBlocks();
+
+private:
 	/// テキスチャーハンドル
 	uint32_t playerTextureHandle_ = 0u;
 	uint32_t boxTextureHandle_ = 0u;
-
-private:
 
 	/// 3Dモテル
 	Model* model_ = nullptr;
@@ -46,6 +49,9 @@ private:
 	/// 自キャラ
 	Player* player_ = nullptr;
 
+	/// マップチップ
+	MapChipField* mapChipField_;
+	
 	///　ボックス
 	std::vector<std::vector<WorldTransform*>> worldTransformBlocks_;
 };
