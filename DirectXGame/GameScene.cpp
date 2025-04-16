@@ -35,6 +35,10 @@ void GameScene::Initialize() {
 
 #pragma region GameObject
 
+	/// スカイドームの生成
+	skydome_ = new Skydome();
+	skydome_->Initialize(&debugCamera_->GetCamera());
+
 	/// Player関連
 	// 自キャラの生成、初期化
 	player_ = new Player();
@@ -104,6 +108,9 @@ void GameScene::Update() {
 #pragma endregion
 
 #pragma region GameObject
+
+	/// スカイドームの更新
+	skydome_->Update();
 
 	/// Player関連
 	// 自キャラの更新
@@ -196,6 +203,9 @@ void GameScene::Render() {
 #pragma region 3Dモデル描画
 	/// 前処理
 	Model::PreDraw(dxCommon->GetCommandList());
+
+	/// スカイドームの描画
+	skydome_->Render();
 
 	/// 自キャラの描画
 	// player_->Render();

@@ -3,6 +3,7 @@
 using namespace KamataEngine;
 #include <vector>
 #include "Player.h"
+#include "Skydome.h"
 
 Matrix4x4 Mult(const Matrix4x4& m1, const Matrix4x4& m2);
 
@@ -38,6 +39,9 @@ private:
 
 
 private:
+
+	/// スカイドーム
+	Skydome* skydome_ = nullptr;
 
 	/// 自キャラ
 	Player* player_ = nullptr;
