@@ -1,17 +1,5 @@
 #include "GameScene.h"
 
-Matrix4x4 Mult(const Matrix4x4& m1, const Matrix4x4& m2) {
-	Matrix4x4 resuit = {};
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			for (int k = 0; k < 4; k++) {
-				resuit.m[i][j] += m1.m[i][k] * m2.m[k][j];
-			}
-		}
-	}
-	return resuit;
-}
-
 void GameScene::GenerateBlocks() {
 	/// ボックス生成
 	// 要素数
@@ -56,6 +44,7 @@ void GameScene::Initialize() {
 	AxisIndicator::GetInstance()->SetTargetCamera(&debugCamera_->GetCamera());
 
 	PrimitiveDrawer::GetInstance()->SetCamera(&debugCamera_->GetCamera());
+
 #pragma endregion
 
 #pragma region GameObject
@@ -67,7 +56,9 @@ void GameScene::Initialize() {
 	/// Player関連
 	// 自キャラの生成、初期化
 	player_ = new Player();
-	player_->Initialize(model_, playerTextureHandle_, &debugCamera_->GetCamera());
+	// 初期配置をマップチップ単位で指定
+	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 18);
+	player_->Initialize(model_, playerTextureHandle_, &debugCamera_->GetCamera(), playerPosition);
 
 	/// マップチップの生成
 	mapChipField_ = new MapChipField();
@@ -124,56 +115,16 @@ void GameScene::Update() {
 				continue;
 			}
 
-			Matrix4x4 matScale = {
-			    worldTransformBlock->scale_.x, 0.0f, 0.0f, 0.0f, 0.0f, worldTransformBlock->scale_.y, 0.0f, 0.0f, 0.0f, 0.0f, worldTransformBlock->scale_.z, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+			Matrix4x4 mS = MakeScaleMatrixM(worldTransformBlock->scale_);
 
-			Matrix4x4 rX = {
-			    1.0f,
-			    0.0f,
-			    0.0f,
-			    0.0f,
-			    0.0f,
-			    cosf(worldTransformBlock->rotation_.x),
-			    sinf(worldTransformBlock->rotation_.x),
-			    0.0f,
-			    0.0f,
-			    -sinf(worldTransformBlock->rotation_.x),
-			    cosf(worldTransformBlock->rotation_.x),
-			    0.0f,
-			    0.0f,
-			    0.0f,
-			    0.0f,
-			    1.0f};
+			Matrix4x4 mR = MakeRotateMatrixM(MakeRotateXMatrixM(worldTransformBlock->rotation_.x),
+											 MakeRotateYMatrixM(worldTransformBlock->rotation_.y),
+											 MakeRotateZMatrixM(worldTransformBlock->rotation_.z));
 
-			Matrix4x4 rY = {cosf(worldTransformBlock->rotation_.y), 0.0f, -sinf(worldTransformBlock->rotation_.y), 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-			                sinf(worldTransformBlock->rotation_.y), 0.0f, cosf(worldTransformBlock->rotation_.y),  0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
-
-			Matrix4x4 rZ = {
-			    cosf(worldTransformBlock->rotation_.z),
-			    sinf(worldTransformBlock->rotation_.z),
-			    0.0f,
-			    0.0f,
-			    -sinf(worldTransformBlock->rotation_.z),
-			    cosf(worldTransformBlock->rotation_.z),
-			    0.0f,
-			    0.0f,
-			    0.0f,
-			    0.0f,
-			    1.0f,
-			    0.0f,
-			    0.0f,
-			    0.0f,
-			    0.0f,
-			    1.0f};
-
-			Matrix4x4 rXYZ = Mult(rX, Mult(rY, rZ));
-
-			Matrix4x4 matTran{
-			    1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, worldTransformBlock->translation_.x, worldTransformBlock->translation_.y, worldTransformBlock->translation_.z,
-			    1.0f};
+			Matrix4x4 mT = MakeTranslateMatrixM(worldTransformBlock->translation_);
 
 			// アフィン変換
-			worldTransformBlock->matWorld_ = Mult(matScale, Mult(rXYZ, matTran));
+			worldTransformBlock->matWorld_ = MultM(mS, MultM(mR, mT));
 
 			// 定数バッファに転送
 			worldTransformBlock->TransferMatrix();
@@ -183,9 +134,7 @@ void GameScene::Update() {
 #pragma endregion
 
 #ifdef _DEBUG
-	// ImGui::Begin("Debug");
-	// ImGui::Text("flag = %d", Audio::GetInstance()->IsPlaying(soundDataHandleStoper_));
-	// ImGui::End();
+	
 	//
 	// ImGui::ShowDemoWindow();
 	//
@@ -209,7 +158,7 @@ void GameScene::Render() {
 	skydome_->Render();
 
 	/// 自キャラの描画
-	// player_->Render();
+	player_->Render();
 
 	/// 　ボックスの描画
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
@@ -226,11 +175,11 @@ void GameScene::Render() {
 	Model::PostDraw();
 #pragma endregion
 
-	PrimitiveDrawer::GetInstance()->DrawLine3d({}, {0, 10, 0}, {1.0f, 0.0f, 0.0f, 1.0f});
-	for (int i = 0; i <= 10; i++) {
-		PrimitiveDrawer::GetInstance()->DrawLine3d({float(-5.0f + i), 0, -5}, {float(-5.0f + i), 0, +5}, {1.0f, 0.0f, 0.0f, 1.0f});
-		PrimitiveDrawer::GetInstance()->DrawLine3d({-5, 0, float(-5.0f + i)}, {+5, 0, float(-5.0f + i)}, {0.0f, 0.0f, 1.0f, 1.0f});
-	}
+	//PrimitiveDrawer::GetInstance()->DrawLine3d({}, {0, 10, 0}, {1.0f, 0.0f, 0.0f, 1.0f});
+	//for (int i = 0; i <= 10; i++) {
+	//	PrimitiveDrawer::GetInstance()->DrawLine3d({float(-5.0f + i), 0, -5}, {float(-5.0f + i), 0, +5}, {1.0f, 0.0f, 0.0f, 1.0f});
+	//	PrimitiveDrawer::GetInstance()->DrawLine3d({-5, 0, float(-5.0f + i)}, {+5, 0, float(-5.0f + i)}, {0.0f, 0.0f, 1.0f, 1.0f});
+	//}
 
 #pragma region 2D描画
 	//// 2D描画の前処理

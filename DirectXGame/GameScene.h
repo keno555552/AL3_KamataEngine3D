@@ -5,8 +5,7 @@ using namespace KamataEngine;
 #include "Player.h"
 #include "Skydome.h"
 #include "MapChipField.h"
-
-Matrix4x4 Mult(const Matrix4x4& m1, const Matrix4x4& m2);
+#include "myMathForAL.h"
 
 class GameScene {
 public:
@@ -50,7 +49,7 @@ private:
 	Player* player_ = nullptr;
 
 	/// マップチップ
-	MapChipField* mapChipField_;
+	MapChipField* mapChipField_ = nullptr;
 	
 	///　ボックス
 	std::vector<std::vector<WorldTransform*>> worldTransformBlocks_;
