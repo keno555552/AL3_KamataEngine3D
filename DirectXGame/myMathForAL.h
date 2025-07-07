@@ -3,8 +3,10 @@
 using namespace KamataEngine;
 
 
-Matrix4x4 MultM(const Matrix4x4& m1, const Matrix4x4& m2);
 
+Vector3 Lerp(Vector3 a, Vector3 b, float t);
+
+Matrix4x4 MultM(const Matrix4x4& m1, const Matrix4x4& m2);
 
 /// <summary>
 /// 拡縮のVector3からMatrix4x4への変換

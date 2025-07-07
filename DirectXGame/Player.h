@@ -36,6 +36,9 @@ public:
 	void Update();
 	/// 描画
 	void Render();
+	/// ワールドトランスフォーム取得
+	WorldTransform& GetWorldTransform() { return worldTransform_; }
+	const Vector3& GetVelocity() const { return velocity_; }
 
 private:
 	///// モデル

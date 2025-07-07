@@ -38,6 +38,11 @@ void GameScene::Initialize() {
 	camera_.Initialize();
 	/// デバックカメラの生成
 	debugCamera_ = new DebugCamera(1280, 720);
+	/// 追従カメラの生成
+	cameraController_ = new CameraController;
+	cameraController_->Initialize();
+	cameraController_->SetMovableArea({20, 178, 10, 27});
+
 	// 軸方向表示の表示を有効にする
 	AxisIndicator::GetInstance()->SetVisible(true);
 	// 軸方向表示が参照するビュープロジェクションを指定する（アドレス渡し）
@@ -45,20 +50,22 @@ void GameScene::Initialize() {
 
 	PrimitiveDrawer::GetInstance()->SetCamera(&debugCamera_->GetCamera());
 
+	Camera &nowCamera = cameraController_->GetCamera();
+
 #pragma endregion
 
 #pragma region GameObject
 
 	/// スカイドームの生成
 	skydome_ = new Skydome();
-	skydome_->Initialize(&debugCamera_->GetCamera());
+	skydome_->Initialize(&nowCamera);
 
 	/// Player関連
 	// 自キャラの生成、初期化
 	player_ = new Player();
 	// 初期配置をマップチップ単位で指定
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 18);
-	player_->Initialize(model_, playerTextureHandle_, &debugCamera_->GetCamera(), playerPosition);
+	player_->Initialize(model_, playerTextureHandle_, &nowCamera, playerPosition);
 
 	/// マップチップの生成
 	mapChipField_ = new MapChipField();
@@ -66,6 +73,9 @@ void GameScene::Initialize() {
 
 	/// マップチップの初期化
 	GenerateBlocks();
+
+	/// 追従カメラの初期化
+	cameraController_->SetTarget(player_);
 
 #pragma endregion
 }
@@ -93,6 +103,8 @@ void GameScene::Update() {
 #pragma region カメラ関連
 
 	debugCamera_->Update();
+	/// 追従カメラの更新
+	cameraController_->Update();
 
 #pragma endregion
 
@@ -131,6 +143,8 @@ void GameScene::Update() {
 		}
 	}
 
+	
+
 #pragma endregion
 
 #ifdef _DEBUG
@@ -167,7 +181,7 @@ void GameScene::Render() {
 				continue;
 			}
 			// モデルの描画
-			modelBlock_->Draw(*worldTransformBlock, debugCamera_->GetCamera(), boxTextureHandle_);
+			modelBlock_->Draw(*worldTransformBlock, cameraController_->GetCamera(), boxTextureHandle_);
 		}
 	}
 

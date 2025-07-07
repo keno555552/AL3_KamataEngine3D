@@ -50,7 +50,8 @@ void Player::Update() {
 					turnFirstRotationY_ = worldTransform_.rotation_.y;
 					turnTimer_ = kTimeTurn;
 				}
-			} else if (Input::GetInstance()->PushKey(DIK_LEFT)) {
+			}
+			if (Input::GetInstance()->PushKey(DIK_LEFT)) {
 				if (velocity_.x > 0.0f) {
 					// 速度と逆方向に入力中に急ブレーキ
 					velocity_.x *= (1.0f - kAttenuation);
@@ -62,6 +63,15 @@ void Player::Update() {
 					turnTimer_ = kTimeTurn;
 				}
 			}
+
+			if (Input::GetInstance()->PushKey(DIK_LEFT) && Input::GetInstance()->PushKey(DIK_RIGHT)) {
+				if (lrDirection_ != LRDirection::None) {
+					lrDirection_ = LRDirection::None;
+					turnFirstRotationY_ = worldTransform_.rotation_.y;
+					turnTimer_ = kTimeTurn;
+				}
+			}
+
 			// 加速/減速
 			velocity_.x += acceleration.x;
 
@@ -73,6 +83,11 @@ void Player::Update() {
 			if (velocity_.x < 0.01f && velocity_.x > -0.01f) {
 				velocity_.x = 0.0f;
 			}
+			if (lrDirection_ != LRDirection::None) {
+				lrDirection_ = LRDirection::None;
+				turnFirstRotationY_ = worldTransform_.rotation_.y;
+				turnTimer_ = kTimeTurn;
+			}
 		}
 
 		// 回転制御
@@ -80,8 +95,9 @@ void Player::Update() {
 			turnTimer_ -= 1.0f;
 
 			float destinationRotationYTable[] = {
-			    0.0f,                     // 右
-			    std::numbers::pi_v<float> // 左
+			    0.0f,							 // 右
+			    std::numbers::pi_v<float>,		 // 左
+			    std::numbers::pi_v<float> / 2.0f // なし
 			};
 			// 状態に応じた角度を取得する
 			float destinationRotationY = destinationRotationYTable[static_cast<uint32_t>(lrDirection_)];
@@ -100,7 +116,6 @@ void Player::Update() {
 			// 空中状態に移行
 			onGround_ = false;
 		}
-
 
 	} else {
 		// 落下速度
@@ -122,7 +137,6 @@ void Player::Update() {
 			// 接地状態に移行
 			onGround_ = true;
 		}
-
 	}
 
 	// 実際移動計算
@@ -147,6 +161,7 @@ void Player::Update() {
 
 	/// ImGuiのデバッグウィンドウ
 	ImGui::Begin("Debug");
+	// ImGui::Checkbox("DebugCamera", &useDebugCamera);
 	ImGui::SliderFloat2("worldTransform_,translation_", &worldTransform_.translation_.x, 1, 50);
 	ImGui::SliderFloat2("worldTransform_,rotation_", &worldTransform_.rotation_.x, 0, 10);
 	ImGui::End();

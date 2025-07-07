@@ -1,5 +1,14 @@
 #include "myMathForAL.h"
 
+Vector3 Lerp(Vector3 a, Vector3 b, float t) {
+	Vector3 result = {};
+	result.x = a.x + (b.x - a.x) * t;
+	result.y = a.y + (b.y - a.y) * t;
+	result.z = a.z + (b.z - a.z) * t;
+
+	return result;
+}
+
 Matrix4x4 MultM(const Matrix4x4& m1, const Matrix4x4& m2) {
 	Matrix4x4 resuit = {};
 	for (int i = 0; i < 4; i++) {

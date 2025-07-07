@@ -6,6 +6,7 @@ using namespace KamataEngine;
 #include "Skydome.h"
 #include "MapChipField.h"
 #include "myMathForAL.h"
+#include "CameraController.h"
 
 class GameScene {
 public:
@@ -38,6 +39,8 @@ private:
 	Camera camera_;
 	/// デバックカメラ
 	DebugCamera* debugCamera_ = nullptr;
+	/// 追従カメラ
+	CameraController* cameraController_ = nullptr;
 
 
 private:
