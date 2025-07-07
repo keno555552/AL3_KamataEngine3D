@@ -29,6 +29,16 @@ Player::~Player() {
 
 void Player::Update() {
 
+	/// 衝突情報を初期化
+	CollisionMapInfo collisionMapInfo;
+	/// 移動量に速度の値をコピー
+	collisionMapInfo.moveVector = velocity_;
+
+	/// マップ衝突チェック
+	MapCollisionDecide(collisionMapInfo);
+	MovePlayerByResult(collisionMapInfo);
+	ceilingCollistionResult(collisionMapInfo);
+
 	/// プレイヤーの移動
 	bool landing = false;
 	///// 移動
@@ -95,8 +105,8 @@ void Player::Update() {
 			turnTimer_ -= 1.0f;
 
 			float destinationRotationYTable[] = {
-			    0.0f,							 // 右
-			    std::numbers::pi_v<float>,		 // 左
+			    0.0f,                            // 右
+			    std::numbers::pi_v<float>,       // 左
 			    std::numbers::pi_v<float> / 2.0f // なし
 			};
 			// 状態に応じた角度を取得する
@@ -174,4 +184,80 @@ void Player::Render() {
 	/// モデルの描画
 	// model_->Draw(worldTransform_, *camera_, textureHandle_);
 	modelPlayer_->Draw(worldTransform_, *camera_);
+}
+
+Vector3 Player::CornerPosition(const Vector3& center, Corner corner) {
+	Vector3 offsetTable[kNumCorner] = {
+	    {-kWidth / 2.0f, -kHeight / 2.0f, 0}, // kRightBottom
+	    {-kWidth / 2.0f, -kHeight / 2.0f, 0}, // kLeftBottom
+	    {-kWidth / 2.0f, +kHeight / 2.0f, 0}, // kRightTop
+	    {-kWidth / 2.0f, +kHeight / 2.0f, 0}, // kLeftTop
+	};
+
+	Vector3 result;
+	result.x = center.x + offsetTable[static_cast<uint32_t>(corner)].x;
+	result.y = center.y + offsetTable[static_cast<uint32_t>(corner)].y;
+	result.z = center.z + offsetTable[static_cast<uint32_t>(corner)].z;
+
+	return result;
+}
+
+void Player::MapCollisionDecide(CollisionMapInfo& info) {
+	/// 移動後の4つの角の座標
+	std::array<Vector3, kNumCorner> positionsNew;
+
+	for (uint32_t i = 0; i < positionsNew.size(); i++) {
+		Vector3 translation_ = {};
+		translation_.x = worldTransform_.translation_.x + info.moveVector.x;
+		translation_.y = worldTransform_.translation_.y + info.moveVector.y;
+		translation_.z = worldTransform_.translation_.z + info.moveVector.z;
+		positionsNew[i] = CornerPosition(translation_, static_cast<Corner>(i));
+	}
+	if (info.moveVector.y < 0) {
+		return;
+	}
+
+	MapChipType mapChipType;
+
+	// 真上の当たり判定を行う
+	bool hit = false;
+
+	// 左上の判定
+	MapChipField::IndexSet indexSet;
+	indexSet = mapChipField_->GetMapChipIndexByPosition(positionsNew[kLeftTop]);
+	mapChipType = mapChipField_->GetMapChipTypeByIndex(indexSet.xIndex, indexSet.yIndex);
+	if (mapChipType == MapChipType::kBlock) {hit = true;}
+
+	if(!hit){
+		// 右上の判定（kRightTopについて同様に判定する）
+		indexSet = mapChipField_->GetMapChipIndexByPosition(positionsNew[kRightTop]);
+		mapChipType = mapChipField_->GetMapChipTypeByIndex(indexSet.xIndex, indexSet.yIndex);
+		if (mapChipType == MapChipType::kBlock) {hit = true;}
+	}
+
+	// ブロックにヒット?
+	if (hit) {
+		// めり込みを排除する方向に移動量を設定する
+		indexSet = mapChipField_->GetMapChipIndexByPosition(positionsNew[kRightTop]);
+		// めり込み先ブロックの矩形取得
+		MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSet.xIndex, indexSet.yIndex);
+		info.moveVector.y = (((0) > (info.moveVector.y)) ? 
+							  (0) : (info.moveVector.y));
+		// 天井判定であることを記録する
+		info.ceilingHit = true;
+	}
+}
+
+void Player::MovePlayerByResult(const CollisionMapInfo& info) { 
+	worldTransform_.translation_.x += info.moveVector.x;
+	worldTransform_.translation_.y += info.moveVector.y;
+	worldTransform_.translation_.z += info.moveVector.z;
+}
+
+void Player::ceilingCollistionResult(const CollisionMapInfo& info) {
+	// 天井に当たった？
+	if (info.ceilingHit) {
+		DebugText::GetInstance()->ConsolePrintf("hit ceiling\n");
+		velocity_.y = 0;
+	}
 }

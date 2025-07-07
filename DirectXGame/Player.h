@@ -1,7 +1,11 @@
 #pragma once
 #include "KamataEngine.h"
 using namespace KamataEngine;
+#include "MapChipField.h"
 #include "myMathForAL.h"
+
+///// 前方宣言
+class MapChipField;
 
 /////設定
 /// 移動速度
@@ -18,14 +22,29 @@ static inline const float kGravityAcceleration = 0.01f;
 static inline const float kLimitFallSpeed = 0.5f;
 /// ジャンプ初速
 static inline const float kJumpAcceleration = 0.5f;
+/// キャラクターの当たり判定サイズ
+static inline const float kWidth = 0.8f;
+static inline const float kHeight = 0.8f;
 
-
-enum class LRDirection {
-	kRight,
-	kLeft,
-	None
+/// マップとの当たり判定情報
+struct CollisionMapInfo {
+	bool ceilingHit = false; // 天井に当の当たり判定
+	bool floorHit = false;   // 床に当の当たり判定
+	bool wallHit = false;    // 壁に当の当たり判定
+	Vector3 moveVector = {}; // 移動量
 };
 
+/// 角
+enum Corner {
+	kRightBottom, // 右下
+	kLeftBottom,  // 左下
+	kRightTop,    // 右上
+	kLeftTop,     // 左上
+
+	kNumCorner    // 要素数
+};
+
+enum class LRDirection { kRight, kLeft, None };
 
 class Player {
 public:
@@ -36,9 +55,19 @@ public:
 	void Update();
 	/// 描画
 	void Render();
+
+	/// 参照命令
+	void SetMpChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
+
 	/// ワールドトランスフォーム取得
 	WorldTransform& GetWorldTransform() { return worldTransform_; }
 	const Vector3& GetVelocity() const { return velocity_; }
+
+private:
+	Vector3 CornerPosition(const Vector3& center, Corner corner);
+	void MapCollisionDecide(CollisionMapInfo& info);
+	void MovePlayerByResult(const CollisionMapInfo& info);
+	void ceilingCollistionResult(const CollisionMapInfo& info);
 
 private:
 	///// モデル
@@ -46,13 +75,18 @@ private:
 
 	/// 単独モデル
 	Model* modelPlayer_ = nullptr;
-	
+
 	/// ワールドトランスフォーム
 	WorldTransform worldTransform_;
 	/// カメラ
 	const Camera* camera_ = nullptr;
 	/// テクスチャーハンドル
 	uint32_t textureHandle_ = 0u;
+
+private:
+	///// 参照
+	/// マップチップによるフィールド
+	MapChipField* mapChipField_ = nullptr;
 
 private:
 	//////// プレイヤーデータ
@@ -66,4 +100,6 @@ private:
 	float turnTimer_ = 0.0f;
 	// 接地状態フラグ
 	bool onGround_ = true;
+
+	float kBlank = 0.0f; // ジャンプ中のブランク時間
 };

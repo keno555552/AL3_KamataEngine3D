@@ -50,6 +50,9 @@ void GameScene::Initialize() {
 
 	PrimitiveDrawer::GetInstance()->SetCamera(&debugCamera_->GetCamera());
 
+	
+
+
 	Camera &nowCamera = cameraController_->GetCamera();
 
 #pragma endregion
@@ -73,6 +76,9 @@ void GameScene::Initialize() {
 
 	/// マップチップの初期化
 	GenerateBlocks();
+
+	/// プレイヤーのマップチップ参照
+	player_->SetMpChipField(mapChipField_);
 
 	/// 追従カメラの初期化
 	cameraController_->SetTarget(player_);
