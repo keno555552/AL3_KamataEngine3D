@@ -188,10 +188,10 @@ void Player::Render() {
 
 Vector3 Player::CornerPosition(const Vector3& center, Corner corner) {
 	Vector3 offsetTable[kNumCorner] = {
-	    {-kWidth / 2.0f, -kHeight / 2.0f, 0}, // kRightBottom
-	    {-kWidth / 2.0f, -kHeight / 2.0f, 0}, // kLeftBottom
-	    {-kWidth / 2.0f, +kHeight / 2.0f, 0}, // kRightTop
-	    {-kWidth / 2.0f, +kHeight / 2.0f, 0}, // kLeftTop
+	    {+kWidth / 2.0f, +kHeight / 2.0f, 0}, // kRightBottom
+	    {-kWidth / 2.0f, +kHeight / 2.0f, 0}, // kLeftBottom
+	    {+kWidth / 2.0f, -kHeight / 2.0f, 0}, // kRightTop
+	    {-kWidth / 2.0f, -kHeight / 2.0f, 0}, // kLeftTop
 	};
 
 	Vector3 result;
@@ -228,27 +228,24 @@ void Player::MapCollisionDecide(CollisionMapInfo& info) {
 	mapChipType = mapChipField_->GetMapChipTypeByIndex(indexSet.xIndex, indexSet.yIndex);
 	if (mapChipType == MapChipType::kBlock) {hit = true;}
 
-	if(!hit){
-		// 右上の判定（kRightTopについて同様に判定する）
-		indexSet = mapChipField_->GetMapChipIndexByPosition(positionsNew[kRightTop]);
-		mapChipType = mapChipField_->GetMapChipTypeByIndex(indexSet.xIndex, indexSet.yIndex);
-		if (mapChipType == MapChipType::kBlock) {hit = true;}
-	}
+	// 右上の判定（kRightTopについて同様に判定する）
+	indexSet = mapChipField_->GetMapChipIndexByPosition(positionsNew[kRightTop]);
+	mapChipType = mapChipField_->GetMapChipTypeByIndex(indexSet.xIndex, indexSet.yIndex);
+	if (mapChipType == MapChipType::kBlock) {hit = true;}
 
 	// ブロックにヒット?
 	if (hit) {
 		// めり込みを排除する方向に移動量を設定する
-		indexSet = mapChipField_->GetMapChipIndexByPosition(positionsNew[kRightTop]);
+		indexSet = mapChipField_->GetMapChipIndexByPosition(positionsNew[kLeftTop]);
 		// めり込み先ブロックの矩形取得
 		MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSet.xIndex, indexSet.yIndex);
-		info.moveVector.y = (((0) > (info.moveVector.y)) ? 
-							  (0) : (info.moveVector.y));
+		info.moveVector.y = (((0) > (info.moveVector.y)) ? (0) : (info.moveVector.y));
 		// 天井判定であることを記録する
 		info.ceilingHit = true;
 	}
 }
 
-void Player::MovePlayerByResult(const CollisionMapInfo& info) { 
+void Player::MovePlayerByResult(const CollisionMapInfo& info) {
 	worldTransform_.translation_.x += info.moveVector.x;
 	worldTransform_.translation_.y += info.moveVector.y;
 	worldTransform_.translation_.z += info.moveVector.z;
@@ -257,7 +254,7 @@ void Player::MovePlayerByResult(const CollisionMapInfo& info) {
 void Player::ceilingCollistionResult(const CollisionMapInfo& info) {
 	// 天井に当たった？
 	if (info.ceilingHit) {
-		DebugText::GetInstance()->ConsolePrintf("hit ceiling\n");
+		//DebugText::GetInstance()->ConsolePrintf("hit ceiling\n");
 		velocity_.y = 0;
 	}
 }
