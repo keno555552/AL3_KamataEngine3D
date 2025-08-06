@@ -23,8 +23,14 @@ static inline const float kLimitFallSpeed = 0.5f;
 /// ジャンプ初速
 static inline const float kJumpAcceleration = 0.5f;
 /// キャラクターの当たり判定サイズ
-static inline const float kWidth = 0.8f;
-static inline const float kHeight = 0.8f;
+static inline const float kWidth = 1.9f;
+static inline const float kHeight = 1.9f;
+/// 着地時の速度減衰率
+static inline const float kAttenuationLanding = 0.00000001f;
+
+///
+static inline const float kAttenuationWall = 0.5f;
+
 
 /// マップとの当たり判定情報
 struct CollisionMapInfo {
@@ -65,7 +71,17 @@ public:
 
 private:
 	Vector3 CornerPosition(const Vector3& center, Corner corner);
+
+	void Move();
+
 	void MapCollisionDecide(CollisionMapInfo& info);
+	void MapCollisionDecideUp  (CollisionMapInfo& info);
+	void MapCollisionDecideDown(CollisionMapInfo& info);
+	void MapCollisionDecideLeft(CollisionMapInfo& info);
+	void MapCollisionDecideRight(CollisionMapInfo& info);
+
+	void WallCollistionAction(CollisionMapInfo& info);
+	void OnGroundChanger(const CollisionMapInfo& info);
 	void MovePlayerByResult(const CollisionMapInfo& info);
 	void ceilingCollistionResult(const CollisionMapInfo& info);
 
