@@ -49,10 +49,7 @@ void GameScene::Initialize() {
 
 	PrimitiveDrawer::GetInstance()->SetCamera(&debugCamera_->GetCamera());
 
-	
-
-
-	Camera &nowCamera = cameraController_->GetCamera();
+	Camera& nowCamera = cameraController_->GetCamera();
 
 #pragma endregion
 
@@ -68,8 +65,17 @@ void GameScene::Initialize() {
 
 	/// Enemy関連
 	// 初期配置をマップチップ単位で指定
-	Vector3 enemyStartPosition = mapChipField_->GetMapChipPositionByIndex(13,18);
-	enemy_->Initialize(&nowCamera, enemyStartPosition);
+	Vector3 enemyStartPosition[3];
+	enemyStartPosition[0] = mapChipField_->GetMapChipPositionByIndex(13, 18);
+	enemyStartPosition[1] = mapChipField_->GetMapChipPositionByIndex(17, 11);
+	enemyStartPosition[2] = mapChipField_->GetMapChipPositionByIndex(8, 13);
+
+	for (int i = 0; i < 3; i++) {
+		Enemy* enemy = new Enemy;
+		enemy->Initialize(&nowCamera, enemyStartPosition[i]);
+
+		enemyGroup_.push_back(enemy);
+	}
 
 	/// マップチップの生成
 	mapChipField_ = new MapChipField();
@@ -93,6 +99,12 @@ GameScene::~GameScene() {
 
 #pragma region GameObject
 	delete player_, player_ = nullptr;
+
+	if (!enemyGroup_.empty()) {
+		for (auto ptr : enemyGroup_) {
+			delete ptr, ptr = nullptr;
+		}
+	}
 
 	delete mapChipField_, mapChipField_ = nullptr;
 
@@ -128,7 +140,11 @@ void GameScene::Update() {
 	player_->Update();
 
 	/// Enemy関連
-	enemy_->Update();
+	if (!enemyGroup_.empty()) {
+		for (auto ptr : enemyGroup_) {
+			ptr->Update();
+		}
+	}
 
 	/// ボックスの更新
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
@@ -139,9 +155,8 @@ void GameScene::Update() {
 
 			Matrix4x4 mS = MakeScaleMatrixM(worldTransformBlock->scale_);
 
-			Matrix4x4 mR = MakeRotateMatrixM(MakeRotateXMatrixM(worldTransformBlock->rotation_.x),
-											 MakeRotateYMatrixM(worldTransformBlock->rotation_.y),
-											 MakeRotateZMatrixM(worldTransformBlock->rotation_.z));
+			Matrix4x4 mR =
+			    MakeRotateMatrixM(MakeRotateXMatrixM(worldTransformBlock->rotation_.x), MakeRotateYMatrixM(worldTransformBlock->rotation_.y), MakeRotateZMatrixM(worldTransformBlock->rotation_.z));
 
 			Matrix4x4 mT = MakeTranslateMatrixM(worldTransformBlock->translation_);
 
@@ -153,12 +168,13 @@ void GameScene::Update() {
 		}
 	}
 
-	
+	CheckAllCollisions();
+
 
 #pragma endregion
 
 #ifdef _DEBUG
-	
+
 	//
 	// ImGui::ShowDemoWindow();
 	//
@@ -185,7 +201,11 @@ void GameScene::Render() {
 	player_->Render();
 
 	/// 敵キャラの描画
-	enemy_->Render();
+	if (!enemyGroup_.empty()) {
+		for (auto ptr : enemyGroup_) {
+			ptr->Render();
+		}
+	}
 
 	/// 　ボックスの描画
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
@@ -202,11 +222,11 @@ void GameScene::Render() {
 	Model::PostDraw();
 #pragma endregion
 
-	//PrimitiveDrawer::GetInstance()->DrawLine3d({}, {0, 10, 0}, {1.0f, 0.0f, 0.0f, 1.0f});
-	//for (int i = 0; i <= 10; i++) {
+	// PrimitiveDrawer::GetInstance()->DrawLine3d({}, {0, 10, 0}, {1.0f, 0.0f, 0.0f, 1.0f});
+	// for (int i = 0; i <= 10; i++) {
 	//	PrimitiveDrawer::GetInstance()->DrawLine3d({float(-5.0f + i), 0, -5}, {float(-5.0f + i), 0, +5}, {1.0f, 0.0f, 0.0f, 1.0f});
 	//	PrimitiveDrawer::GetInstance()->DrawLine3d({-5, 0, float(-5.0f + i)}, {+5, 0, float(-5.0f + i)}, {0.0f, 0.0f, 1.0f, 1.0f});
-	//}
+	// }
 
 #pragma region 2D描画
 	//// 2D描画の前処理
@@ -214,4 +234,33 @@ void GameScene::Render() {
 	//// 2D描画の後処理
 	// Sprite::PostDraw();
 #pragma endregion
+}
+
+void GameScene::CheckAllCollisions() {
+	#pragma region 自キャラと敵キャラの当たり判定
+	#pragma endregion
+	/// 判定対象1と2の座標
+	AABB aabb1, aabb2;
+
+	/// 自キャラの座標
+	aabb1 = player_->GetAABB();
+
+	/// 自キャラと敵弾全ての当たり判定
+	if (!enemyGroup_.empty()) {
+		for (Enemy* enemy : enemyGroup_) {
+			/// 敵弾の座標
+			aabb2 = enemy->GetAABB();
+
+			if (crashDecision(aabb1, aabb2)) {
+				/// 自キャラの衝突時関数を呼び出す
+				player_->OnCollision(enemy);
+				enemy->OnCollision(player_);
+			}
+		}
+	}
+
+	#pragma region 自キャラとアイテムの当たり判定
+	#pragma endregion
+	#pragma region 自弾と敵キャラの当たり判定
+	#pragma endregion
 }

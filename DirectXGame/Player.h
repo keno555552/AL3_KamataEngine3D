@@ -3,6 +3,7 @@
 using namespace KamataEngine;
 #include "MapChipField.h"
 #include "myMathForAL.h"
+#include "crashDecision.h"
 
 ///// 前方宣言
 class MapChipField;
@@ -23,14 +24,13 @@ static inline const float kLimitFallSpeed = 0.5f;
 /// ジャンプ初速
 static inline const float kJumpAcceleration = 0.5f;
 /// キャラクターの当たり判定サイズ
-static inline const float kWidth = 1.9f;
-static inline const float kHeight = 1.9f;
+static inline const float kPlayerWidth = 1.9f;
+static inline const float kPlayerHeight = 1.9f;
 /// 着地時の速度減衰率
 static inline const float kAttenuationLanding = 0.00000001f;
 
 ///
 static inline const float kAttenuationWall = 0.5f;
-
 
 /// マップとの当たり判定情報
 struct CollisionMapInfo {
@@ -47,11 +47,12 @@ enum Corner {
 	kRightTop,    // 右上
 	kLeftTop,     // 左上
 
-	kNumCorner    // 要素数
+	kNumCorner // 要素数
 };
 
 enum class LRDirection { kRight, kLeft, None };
 
+class Enemy;
 class Player {
 public:
 	~Player();
@@ -62,12 +63,16 @@ public:
 	/// 描画
 	void Render();
 
+	void OnCollision(const Enemy* enemy);
+
 	/// 参照命令
 	void SetMpChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
 
 	/// ワールドトランスフォーム取得
 	WorldTransform& GetWorldTransform() { return worldTransform_; }
+	Vector3 GetWorldPosition();
 	const Vector3& GetVelocity() const { return velocity_; }
+	AABB GetAABB();
 
 private:
 	Vector3 CornerPosition(const Vector3& center, Corner corner);
@@ -75,7 +80,7 @@ private:
 	void Move();
 
 	void MapCollisionDecide(CollisionMapInfo& info);
-	void MapCollisionDecideUp  (CollisionMapInfo& info);
+	void MapCollisionDecideUp(CollisionMapInfo& info);
 	void MapCollisionDecideDown(CollisionMapInfo& info);
 	void MapCollisionDecideLeft(CollisionMapInfo& info);
 	void MapCollisionDecideRight(CollisionMapInfo& info);

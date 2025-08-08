@@ -72,12 +72,40 @@ void Player::Render() {
 	modelPlayer_->Draw(worldTransform_, *camera_);
 }
 
+void Player::OnCollision(const Enemy* enemy) { 
+	(void)enemy;
+	/// ジャンプ開始(仮処理)
+	{
+		velocity_.y += 3.0f;
+	}
+}
+
+Vector3 Player::GetWorldPosition() { 
+	Vector3 worldPos;
+	worldPos.x = worldTransform_.matWorld_.m[3][0];
+	worldPos.y = worldTransform_.matWorld_.m[3][1];
+	worldPos.z = worldTransform_.matWorld_.m[3][2];
+	return worldPos; 
+
+}
+
+AABB Player::GetAABB() { 
+	Vector3 worldPos = GetWorldPosition();	
+	
+	AABB aabb;
+
+	aabb.min = {worldPos.x - kPlayerWidth / 2.0f, worldPos.y - kPlayerHeight / 2.0f, worldPos.z - kPlayerWidth / 2.0f};
+	aabb.max = {worldPos.x + kPlayerWidth / 2.0f, worldPos.y + kPlayerHeight / 2.0f, worldPos.z + kPlayerWidth / 2.0f};
+
+	return aabb;
+}
+
 Vector3 Player::CornerPosition(const Vector3& center, Corner corner) {
 	Vector3 offsetTable[kNumCorner] = {
-	    {+kWidth / 2.0f, -kHeight / 2.0f, 0}, // kRightBottom
-	    {-kWidth / 2.0f, -kHeight / 2.0f, 0}, // kLeftBottom
-	    {+kWidth / 2.0f, +kHeight / 2.0f, 0}, // kRightTop
-	    {-kWidth / 2.0f, +kHeight / 2.0f, 0}, // kLeftTop
+	    {+kPlayerWidth / 2.0f, -kPlayerHeight / 2.0f, 0}, // kRightBottom
+	    {-kPlayerWidth / 2.0f, -kPlayerHeight / 2.0f, 0}, // kLeftBottom
+	    {+kPlayerWidth / 2.0f, +kPlayerHeight / 2.0f, 0}, // kRightTop
+	    {-kPlayerWidth / 2.0f, +kPlayerHeight / 2.0f, 0}, // kLeftTop
 	};
 
 	Vector3 result;
@@ -234,7 +262,7 @@ void Player::MapCollisionDecideUp(CollisionMapInfo& info) {
 		if (indexSetNow.yIndex != indexSet.yIndex) {
 			// めり込み先ブロックの矩形取得
 			MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSet.xIndex, indexSet.yIndex);
-			info.moveVector.y = std::min(0.0f, rect.bottom - (kHeight / 2.0f) - worldTransform_.translation_.y);
+			info.moveVector.y = std::min(0.0f, rect.bottom - (kPlayerHeight / 2.0f) - worldTransform_.translation_.y);
 			// 天井判定であることを記録する
 			info.ceilingHit = true;
 		}
@@ -283,7 +311,7 @@ void Player::MapCollisionDecideDown(CollisionMapInfo& info) {
 		if (indexSetNow.yIndex != indexSet.yIndex) {
 		// めり込み先ブロックの矩形取得
 		MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSet.xIndex, indexSet.yIndex);
-		info.moveVector.y = std::max(0.0f, rect.top - (kHeight / 2.0f) - worldTransform_.translation_.y);
+		info.moveVector.y = std::max(0.0f, rect.top - (kPlayerHeight / 2.0f) - worldTransform_.translation_.y);
 		// 床判定であることを記録する
 		info.floorHit = true;
 		}
@@ -332,7 +360,7 @@ void Player::MapCollisionDecideLeft(CollisionMapInfo& info) {
 		if (indexSetNow.xIndex != indexSet.xIndex) {
 			// めり込み先ブロックの矩形取得
 			MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSet.xIndex, indexSet.yIndex);
-			info.moveVector.x = std::max(0.0f, rect.left - worldTransform_.translation_.x - (kWidth / 2.0f));
+			info.moveVector.x = std::max(0.0f, rect.left - worldTransform_.translation_.x - (kPlayerWidth / 2.0f));
 			// 床判定であることを記録する
 			DebugText::GetInstance()->ConsolePrintf("hit ceiling\n");
 			info.wallHit = true;
@@ -382,7 +410,7 @@ void Player::MapCollisionDecideRight(CollisionMapInfo& info) {
 		if (indexSetNow.xIndex != indexSet.xIndex) {
 			// めり込み先ブロックの矩形取得
 			MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSet.xIndex, indexSet.yIndex);
-			info.moveVector.x = std::min(0.0f, rect.right - worldTransform_.translation_.x - (kWidth / 2.0f));
+			info.moveVector.x = std::min(0.0f, rect.right - worldTransform_.translation_.x - (kPlayerWidth / 2.0f));
 			// 床判定であることを記録する
 			info.wallHit = true;
 		}

@@ -53,15 +53,36 @@ void Enemy::Update() {
 	// ワールドトランスフォームの更新
 	worldTransform_.TransferMatrix();
 
-	/// ImGuiのデバッグウィンドウ
-	ImGui::Begin("Debug2");
-	// ImGui::Checkbox("DebugCamera", &useDebugCamera);
-	ImGui::SliderFloat("param", &param, 0,100);
-	ImGui::End();
+	///// ImGuiのデバッグウィンドウ
+	//ImGui::Begin("Debug2");
+	//// ImGui::Checkbox("DebugCamera", &useDebugCamera);
+	//ImGui::SliderFloat("param", &param, 0,100);
+	//ImGui::End();
 }
 
 
 void Enemy::Render() {
 	/// モデルの描画
 	model_->Draw(worldTransform_, *camera_);
+}
+
+void Enemy::OnCollision(const Player* player) { (void)player; }
+
+Vector3 Enemy::GetWorldPosition() {
+	Vector3 worldPos;
+	worldPos.x = worldTransform_.matWorld_.m[3][0];
+	worldPos.y = worldTransform_.matWorld_.m[3][1];
+	worldPos.z = worldTransform_.matWorld_.m[3][2];
+	return worldPos;
+};
+
+AABB Enemy::GetAABB() {
+	Vector3 worldPos = GetWorldPosition();
+
+	AABB aabb;
+
+	aabb.min = {worldPos.x - kEnemyWidth / 2.0f, worldPos.y - kEnemyHeight / 2.0f, worldPos.z - kEnemyWidth / 2.0f};
+	aabb.max = {worldPos.x + kEnemyWidth / 2.0f, worldPos.y + kEnemyHeight / 2.0f, worldPos.z + kEnemyWidth / 2.0f};
+
+	return aabb;
 }

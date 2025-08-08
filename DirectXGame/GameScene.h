@@ -24,6 +24,7 @@ public:
 private:
 
 	void GenerateBlocks();
+	void CheckAllCollisions();
 
 private:
 	/// テキスチャーハンドル
@@ -52,7 +53,7 @@ private:
 	Player* player_ = new Player;
 
 	/// 自キャラ
-	Enemy* enemy_ = new Enemy;
+	std::list<Enemy*> enemyGroup_;
 
 	/// マップチップ
 	MapChipField* mapChipField_ = nullptr;

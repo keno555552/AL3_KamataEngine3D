@@ -1,11 +1,15 @@
 #pragma once
 #include "KamataEngine.h"
 using namespace KamataEngine;
+#include "CameraController.h"
 #include "MapChipField.h"
 #include "myMathForAL.h"
 
 /// 歩きの速さ
 static inline const float kWalkSpeed = 0.05f;
+/// キャラクターの当たり判定サイズ
+static inline const float kEnemyWidth = 1.9f;
+static inline const float kEnemyHeight = 1.9f;
 
 ///// アニメーション
 /// 最初の角度[度]
@@ -15,10 +19,10 @@ static inline const float kWalkMotionAngleEnd = 30.0f;
 /// アニメーションの周期とその時間[秒]
 static inline const float kWSalkMotionTime = 2.0f;
 
-
 /// <summary>
 /// 敵
 /// </summary>
+class Player;
 class Enemy {
 public:
 	void Initialize(const Camera* camera, const Vector3& position);
@@ -26,6 +30,11 @@ public:
 	void Update();
 	/// 描画
 	void Render();
+
+	void OnCollision(const Player* player);
+
+	Vector3 GetWorldPosition();
+	AABB GetAABB();
 
 private:
 	/// 単独モデル
