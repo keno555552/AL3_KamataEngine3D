@@ -56,7 +56,7 @@ class Player {
 public:
 	~Player();
 	/// 初期化
-	void Initialize(Model* model, uint32_t textureHandle, const Camera* camera, const Vector3& position);
+	void Initialize(Model* model, const Camera* camera, const Vector3& position);
 	/// 更新
 	void Update();
 	/// 描画

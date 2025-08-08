@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <numbers>
 
-void Player::Initialize(Model* model, uint32_t textureHandle, const Camera* camera, const Vector3& position) {
+void Player::Initialize(Model* model,  const Camera* camera, const Vector3& position) {
 	/// モデルの設定
 	model_ = model;
 	modelPlayer_ = Model::CreateFromOBJ("player4", true);
@@ -15,7 +15,7 @@ void Player::Initialize(Model* model, uint32_t textureHandle, const Camera* came
 	/// カメラの設定
 	camera_ = camera;
 	/// テクスチャーハンドルの設定
-	textureHandle_ = textureHandle;
+	//textureHandle_ = textureHandle;
 
 	/// ワールドトランスフォームの初期化
 	// 初期回転

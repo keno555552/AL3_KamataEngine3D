@@ -28,7 +28,6 @@ void GameScene::GenerateBlocks() {
 
 void GameScene::Initialize() {
 #pragma region System
-	playerTextureHandle_ = TextureManager::Load("obj.png");
 	boxTextureHandle_ = TextureManager::Load("cube/cube.jpg");
 	model_ = Model::Create();
 	modelBlock_ = Model::Create();
@@ -60,15 +59,17 @@ void GameScene::Initialize() {
 #pragma region GameObject
 
 	/// スカイドームの生成
-	skydome_ = new Skydome();
 	skydome_->Initialize(&nowCamera);
 
 	/// Player関連
-	// 自キャラの生成、初期化
-	player_ = new Player();
 	// 初期配置をマップチップ単位で指定
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 18);
-	player_->Initialize(model_, playerTextureHandle_, &nowCamera, playerPosition);
+	player_->Initialize(model_, &nowCamera, playerPosition);
+
+	/// Enemy関連
+	// 初期配置をマップチップ単位で指定
+	Vector3 enemyStartPosition = mapChipField_->GetMapChipPositionByIndex(13,18);
+	enemy_->Initialize(&nowCamera, enemyStartPosition);
 
 	/// マップチップの生成
 	mapChipField_ = new MapChipField();
@@ -126,6 +127,9 @@ void GameScene::Update() {
 	// 自キャラの更新
 	player_->Update();
 
+	/// Enemy関連
+	enemy_->Update();
+
 	/// ボックスの更新
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
@@ -179,6 +183,9 @@ void GameScene::Render() {
 
 	/// 自キャラの描画
 	player_->Render();
+
+	/// 敵キャラの描画
+	enemy_->Render();
 
 	/// 　ボックスの描画
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {

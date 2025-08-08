@@ -3,6 +3,7 @@
 using namespace KamataEngine;
 #include <vector>
 #include "Player.h"
+#include "Enemy.h"
 #include "Skydome.h"
 #include "MapChipField.h"
 #include "myMathForAL.h"
@@ -26,7 +27,6 @@ private:
 
 private:
 	/// テキスチャーハンドル
-	uint32_t playerTextureHandle_ = 0u;
 	uint32_t boxTextureHandle_ = 0u;
 
 	/// 3Dモテル
@@ -46,10 +46,13 @@ private:
 private:
 
 	/// スカイドーム
-	Skydome* skydome_ = nullptr;
+	Skydome* skydome_ = new Skydome;
 
 	/// 自キャラ
-	Player* player_ = nullptr;
+	Player* player_ = new Player;
+
+	/// 自キャラ
+	Enemy* enemy_ = new Enemy;
 
 	/// マップチップ
 	MapChipField* mapChipField_ = nullptr;
