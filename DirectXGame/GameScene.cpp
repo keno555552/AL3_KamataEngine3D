@@ -51,6 +51,8 @@ void GameScene::Initialize() {
 
 	Camera& nowCamera = cameraController_->GetCamera();
 
+	
+
 #pragma endregion
 
 #pragma region GameObject
@@ -69,6 +71,12 @@ void GameScene::Initialize() {
 	enemyStartPosition[0] = mapChipField_->GetMapChipPositionByIndex(13, 18);
 	enemyStartPosition[1] = mapChipField_->GetMapChipPositionByIndex(17, 11);
 	enemyStartPosition[2] = mapChipField_->GetMapChipPositionByIndex(8, 13);
+
+
+	// Test
+	deathParticles_ = new DeathParticles;
+	deathParticles_->Initialize(&nowCamera, playerPosition);
+
 
 	for (int i = 0; i < 3; i++) {
 		Enemy* enemy = new Enemy;
@@ -115,6 +123,8 @@ GameScene::~GameScene() {
 	}
 	worldTransformBlocks_.clear();
 
+	delete deathParticles_,deathParticles_ = nullptr;
+
 #pragma endregion
 }
 
@@ -138,6 +148,8 @@ void GameScene::Update() {
 	/// Player関連
 	// 自キャラの更新
 	player_->Update();
+
+	deathParticles_->Update();
 
 	/// Enemy関連
 	if (!enemyGroup_.empty()) {
@@ -200,6 +212,8 @@ void GameScene::Render() {
 	/// 自キャラの描画
 	player_->Render();
 
+	deathParticles_->Draw();
+
 	/// 敵キャラの描画
 	if (!enemyGroup_.empty()) {
 		for (auto ptr : enemyGroup_) {
@@ -238,7 +252,6 @@ void GameScene::Render() {
 
 void GameScene::CheckAllCollisions() {
 	#pragma region 自キャラと敵キャラの当たり判定
-	#pragma endregion
 	/// 判定対象1と2の座標
 	AABB aabb1, aabb2;
 
@@ -258,7 +271,7 @@ void GameScene::CheckAllCollisions() {
 			}
 		}
 	}
-
+	#pragma endregion
 	#pragma region 自キャラとアイテムの当たり判定
 	#pragma endregion
 	#pragma region 自弾と敵キャラの当たり判定

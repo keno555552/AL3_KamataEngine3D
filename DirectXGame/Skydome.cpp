@@ -7,7 +7,8 @@ Skydome::~Skydome() {
 void Skydome::Initialize(const Camera* camera) {
 	/// モデルの設定
 	//modelSkydome_ = Model::CreateFromOBJ("skydome", true);
-	modelSkydome_ = Model::CreateFromOBJ("skydome2", true);
+	//modelSkydome_ = Model::CreateFromOBJ("skydome2", true);
+	modelSkydome_ = Model::CreateFromOBJ("skydome3", true);
 	/// ワールドトランスフォームの初期化
 	worldTransform_.Initialize();
 	/// カメラの設定

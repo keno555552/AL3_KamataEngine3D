@@ -3,6 +3,7 @@
 using namespace KamataEngine;
 #include <vector>
 #include "Player.h"
+#include "Particles.h"
 #include "Enemy.h"
 #include "Skydome.h"
 #include "MapChipField.h"
@@ -51,6 +52,8 @@ private:
 
 	/// 自キャラ
 	Player* player_ = new Player;
+	/// 死亡エフェクト
+	DeathParticles* deathParticles_ = nullptr;
 
 	/// 自キャラ
 	std::list<Enemy*> enemyGroup_;

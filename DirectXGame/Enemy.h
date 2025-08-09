@@ -41,10 +41,10 @@ private:
 	Model* model_ = nullptr;
 	/// ワールドトランスフォーム
 	WorldTransform worldTransform_;
-	/// 速度
-	Vector3 velocity_ = {};
 	/// カメラ
 	const Camera* camera_ = nullptr;
+	/// 速度
+	Vector3 velocity_ = {};
 	/// 経過時間
 	float walkTimer_ = 0.0f;
 };

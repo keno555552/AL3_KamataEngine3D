@@ -4,6 +4,8 @@ using namespace KamataEngine;
 
 
 
+Vector3 TranformM4toV3(const Matrix4x4& m1);
+
 Vector3 Lerp(Vector3 a, Vector3 b, float t);
 
 Matrix4x4 MultM(const Matrix4x4& m1, const Matrix4x4& m2);

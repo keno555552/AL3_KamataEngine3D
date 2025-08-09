@@ -1,5 +1,9 @@
 #include "myMathForAL.h"
 
+Vector3 TranformM4toV3(const Matrix4x4& m) { 
+	return Vector3(m.m[3][0],m.m[3][1],m.m[3][2]);
+}
+
 Vector3 Lerp(Vector3 a, Vector3 b, float t) {
 	Vector3 result = {};
 	result.x = a.x + (b.x - a.x) * t;
