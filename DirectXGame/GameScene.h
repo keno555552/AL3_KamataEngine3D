@@ -1,14 +1,20 @@
 #pragma once
 #include "KamataEngine.h"
 using namespace KamataEngine;
-#include <vector>
-#include "Player.h"
-#include "Particles.h"
-#include "Enemy.h"
-#include "Skydome.h"
-#include "MapChipField.h"
-#include "myMathForAL.h"
 #include "CameraController.h"
+#include "Enemy.h"
+#include "MapChipField.h"
+#include "Particles.h"
+#include "Player.h"
+#include "Skydome.h"
+#include "myMathForAL.h"
+#include <vector>
+
+/// ゲームのフェイズ(型)
+enum class Phase {
+	kPlay,
+	kDeath,
+};
 
 class GameScene {
 public:
@@ -22,10 +28,13 @@ public:
 	/// 描画
 	void Render();
 
-private:
+	/// 終了フラグのgetter
+	bool IsFinished() const { return finished_; }
 
+private:
 	void GenerateBlocks();
 	void CheckAllCollisions();
+	void ChangePhase();
 
 private:
 	/// テキスチャーハンドル
@@ -44,9 +53,14 @@ private:
 	/// 追従カメラ
 	CameraController* cameraController_ = nullptr;
 
+private:
+	/// ゲームプレイフェイズから開始
+	Phase phase_ = Phase::kPlay;
+
+	/// 終了フラグ
+	bool finished_ = false;
 
 private:
-
 	/// スカイドーム
 	Skydome* skydome_ = new Skydome;
 
@@ -60,7 +74,7 @@ private:
 
 	/// マップチップ
 	MapChipField* mapChipField_ = nullptr;
-	
-	///　ボックス
+
+	/// 　ボックス
 	std::vector<std::vector<WorldTransform*>> worldTransformBlocks_;
 };

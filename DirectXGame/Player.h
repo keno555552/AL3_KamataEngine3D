@@ -2,8 +2,8 @@
 #include "KamataEngine.h"
 using namespace KamataEngine;
 #include "MapChipField.h"
-#include "myMathForAL.h"
 #include "crashDecision.h"
+#include "myMathForAL.h"
 
 ///// 前方宣言
 class MapChipField;
@@ -57,9 +57,11 @@ class Player {
 public:
 	~Player();
 	/// 初期化
-	void Initialize(Model* model, const Camera* camera, const Vector3& position);
+	void Initialize( const Camera* camera, const Vector3& position);
 	/// 更新
 	void Update();
+	/// 更新(title描画用)
+	void UpdateForTitle();
 	/// 描画
 	void Render();
 
@@ -73,6 +75,7 @@ public:
 	Vector3 GetWorldPosition();
 	const Vector3& GetVelocity() const { return velocity_; }
 	AABB GetAABB();
+	bool GetStateDead() const { return isDead_; }
 
 private:
 	Vector3 CornerPosition(const Vector3& center, Corner corner);
@@ -110,6 +113,10 @@ private:
 	MapChipField* mapChipField_ = nullptr;
 
 private:
+	//////// Title
+	/// 経過時間
+	float titleWalkTimer_ = 0.0f;
+
 	//////// プレイヤーデータ
 	/// 移動速度
 	Vector3 velocity_ = {};
@@ -123,4 +130,9 @@ private:
 	bool onGround_ = true;
 
 	float kBlank = 0.0f; // ジャンプ中のブランク時間
+
+private:
+	// デスフラグ
+	bool isDead_ = false;
+
 };

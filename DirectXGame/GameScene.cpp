@@ -51,8 +51,6 @@ void GameScene::Initialize() {
 
 	Camera& nowCamera = cameraController_->GetCamera();
 
-	
-
 #pragma endregion
 
 #pragma region GameObject
@@ -63,7 +61,7 @@ void GameScene::Initialize() {
 	/// Player関連
 	// 初期配置をマップチップ単位で指定
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 18);
-	player_->Initialize(model_, &nowCamera, playerPosition);
+	player_->Initialize(&nowCamera, playerPosition);
 
 	/// Enemy関連
 	// 初期配置をマップチップ単位で指定
@@ -72,11 +70,9 @@ void GameScene::Initialize() {
 	enemyStartPosition[1] = mapChipField_->GetMapChipPositionByIndex(17, 11);
 	enemyStartPosition[2] = mapChipField_->GetMapChipPositionByIndex(8, 13);
 
-
-	// Test
-	deathParticles_ = new DeathParticles;
-	deathParticles_->Initialize(&nowCamera, playerPosition);
-
+	//// Test
+	// deathParticles_ = new DeathParticles;
+	// deathParticles_->Initialize(&nowCamera, playerPosition);
 
 	for (int i = 0; i < 3; i++) {
 		Enemy* enemy = new Enemy;
@@ -123,7 +119,7 @@ GameScene::~GameScene() {
 	}
 	worldTransformBlocks_.clear();
 
-	delete deathParticles_,deathParticles_ = nullptr;
+	delete deathParticles_, deathParticles_ = nullptr;
 
 #pragma endregion
 }
@@ -142,46 +138,102 @@ void GameScene::Update() {
 
 #pragma region GameObject
 
-	/// スカイドームの更新
-	skydome_->Update();
+	switch (phase_) {
+	case Phase::kPlay:
+		///////////////////////////////////////////////////////////////////////////////////
+		/// スカイドームの更新
+		skydome_->Update();
 
-	/// Player関連
-	// 自キャラの更新
-	player_->Update();
+		/// Player関連
+		player_->Update();
 
-	deathParticles_->Update();
-
-	/// Enemy関連
-	if (!enemyGroup_.empty()) {
-		for (auto ptr : enemyGroup_) {
-			ptr->Update();
-		}
-	}
-
-	/// ボックスの更新
-	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
-		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
-			if (!worldTransformBlock) {
-				continue;
+		/// Enemy関連
+		if (!enemyGroup_.empty()) {
+			for (auto ptr : enemyGroup_) {
+				ptr->Update();
 			}
-
-			Matrix4x4 mS = MakeScaleMatrixM(worldTransformBlock->scale_);
-
-			Matrix4x4 mR =
-			    MakeRotateMatrixM(MakeRotateXMatrixM(worldTransformBlock->rotation_.x), MakeRotateYMatrixM(worldTransformBlock->rotation_.y), MakeRotateZMatrixM(worldTransformBlock->rotation_.z));
-
-			Matrix4x4 mT = MakeTranslateMatrixM(worldTransformBlock->translation_);
-
-			// アフィン変換
-			worldTransformBlock->matWorld_ = MultM(mS, MultM(mR, mT));
-
-			// 定数バッファに転送
-			worldTransformBlock->TransferMatrix();
 		}
+
+		/// ボックスの更新
+		for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
+			for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
+				if (!worldTransformBlock) {
+					continue;
+				}
+
+				Matrix4x4 mS = MakeScaleMatrixM(worldTransformBlock->scale_);
+
+				Matrix4x4 mR =
+				    MakeRotateMatrixM(MakeRotateXMatrixM(worldTransformBlock->rotation_.x), MakeRotateYMatrixM(worldTransformBlock->rotation_.y), MakeRotateZMatrixM(worldTransformBlock->rotation_.z));
+
+				Matrix4x4 mT = MakeTranslateMatrixM(worldTransformBlock->translation_);
+
+				// アフィン変換
+				worldTransformBlock->matWorld_ = MultM(mS, MultM(mR, mT));
+
+				// 定数バッファに転送
+				worldTransformBlock->TransferMatrix();
+			}
+		}
+
+		CheckAllCollisions();
+
+		if (player_->GetStateDead()) {
+			/// 死亡演出フェーズに切り替え
+			phase_ = Phase::kDeath;
+			/// 自キャラの座標を取得
+			const Vector3& deathParticlesPosition = player_->GetWorldPosition();
+
+			deathParticles_ = new DeathParticles;
+			deathParticles_->Initialize(&cameraController_->GetCamera(), deathParticlesPosition);
+		}
+
+		break;
+	case Phase::kDeath:
+		///////////////////////////////////////////////////////////////////////////////////
+		/// スカイドームの更新
+		skydome_->Update();
+
+		/// Enemy関連
+		if (!enemyGroup_.empty()) {
+			for (auto ptr : enemyGroup_) {
+				ptr->Update();
+			}
+		}
+
+		deathParticles_->Update();
+
+		/// ボックスの更新
+		for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
+			for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
+				if (!worldTransformBlock) {
+					continue;
+				}
+
+				Matrix4x4 mS = MakeScaleMatrixM(worldTransformBlock->scale_);
+
+				Matrix4x4 mR =
+				    MakeRotateMatrixM(MakeRotateXMatrixM(worldTransformBlock->rotation_.x), MakeRotateYMatrixM(worldTransformBlock->rotation_.y), MakeRotateZMatrixM(worldTransformBlock->rotation_.z));
+
+				Matrix4x4 mT = MakeTranslateMatrixM(worldTransformBlock->translation_);
+
+				// アフィン変換
+				worldTransformBlock->matWorld_ = MultM(mS, MultM(mR, mT));
+
+				// 定数バッファに転送
+				worldTransformBlock->TransferMatrix();
+			}
+		}
+
+		CheckAllCollisions();
+
+		if (deathParticles_ && deathParticles_->IsFinished()) {
+			finished_ = true;
+		}
+
+		///////////////////////////////////////////////////////////////////////////////////
+		break;
 	}
-
-	CheckAllCollisions();
-
 
 #pragma endregion
 
@@ -212,7 +264,9 @@ void GameScene::Render() {
 	/// 自キャラの描画
 	player_->Render();
 
-	deathParticles_->Draw();
+	if (deathParticles_ != nullptr) {
+		deathParticles_->Draw();
+	}
 
 	/// 敵キャラの描画
 	if (!enemyGroup_.empty()) {
@@ -251,7 +305,7 @@ void GameScene::Render() {
 }
 
 void GameScene::CheckAllCollisions() {
-	#pragma region 自キャラと敵キャラの当たり判定
+#pragma region 自キャラと敵キャラの当たり判定
 	/// 判定対象1と2の座標
 	AABB aabb1, aabb2;
 
@@ -271,9 +325,18 @@ void GameScene::CheckAllCollisions() {
 			}
 		}
 	}
-	#pragma endregion
-	#pragma region 自キャラとアイテムの当たり判定
-	#pragma endregion
-	#pragma region 自弾と敵キャラの当たり判定
-	#pragma endregion
+#pragma endregion
+#pragma region 自キャラとアイテムの当たり判定
+#pragma endregion
+#pragma region 自弾と敵キャラの当たり判定
+#pragma endregion
+}
+
+void GameScene::ChangePhase() {
+	switch (phase_) {
+	case Phase::kPlay:
+		break;
+	case Phase::kDeath:
+		break;
+	}
 }

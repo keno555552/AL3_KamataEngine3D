@@ -2,6 +2,8 @@
 #include "KamataEngine.h"
 #include <Windows.h>
 using namespace KamataEngine;
+#include "TitleScene.h"
+#include "sceneChanger.h"
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
@@ -12,9 +14,15 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	ImGuiManager* imguiManager = ImGuiManager::GetInstance();
 	/// DirectXの初期化
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
-	/// GameSceneの生成まだわ初期化
-	GameScene* gameScene = new GameScene();
-	gameScene->Initialize();
+
+	Scene scene = Scene::kTitle;
+
+	/// TitleSceneの生成まだわ初期化
+	TitleScene* titleScene = new TitleScene;
+	titleScene->Initialize();
+
+	/// GameSceneの生成,そして待機
+	GameScene* gameScene = nullptr;
 
 #pragma endregion
 
@@ -22,6 +30,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	while (true) {
 
 #pragma region ゲーム処理
+
 		/// ImGui受付開始
 		imguiManager->Begin();
 
@@ -29,18 +38,18 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			break;
 		}
 
-		/// ゲームシーンの更新
-		gameScene->Update();
+		ChangeScene(scene, &titleScene, &gameScene);
+		UpdateScene(scene, &titleScene, &gameScene);
 
 		/// ImGui受付終了
 		imguiManager->End();
 #pragma endregion
 
 #pragma region 描画処理
+
 		dxCommon->PreDraw();
 
-		/// ゲームシーンの描画
-		gameScene->Render();
+		DrawScene(scene, &titleScene, &gameScene);
 
 		/// ImGui描画
 		imguiManager->Draw();
@@ -59,9 +68,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 #pragma region 後処理
 
-	/// GameSceneの後処理
-	delete gameScene;
-	gameScene = nullptr;
+	if (titleScene) {
+		delete titleScene, titleScene = nullptr;
+	}
+	if (gameScene) {
+		delete gameScene, gameScene = nullptr;
+	}
 
 #pragma endregion
 

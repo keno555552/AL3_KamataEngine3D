@@ -75,6 +75,13 @@ void DeathParticles::Update() {
 	color_.w = std::clamp((1.0f - counter_ / kDuration), 0.0f, 1.0f);
 
 	objectColor_.SetColor(color_);
+
+	///// ImGuiのデバッグウィンドウ
+	//ImGui::Begin("Debug");
+	//// ImGui::Checkbox("DebugCamera", &useDebugCamera);
+	//ImGui::SliderFloat("counter_", &counter_, 1, 50);
+	//ImGui::Checkbox("isFinished_", &isFinished_);
+	//ImGui::End();
 }
 
 void DeathParticles::Draw() {

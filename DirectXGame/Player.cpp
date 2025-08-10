@@ -3,9 +3,8 @@
 #include <algorithm>
 #include <numbers>
 
-void Player::Initialize(Model* model,  const Camera* camera, const Vector3& position) {
+void Player::Initialize(const Camera* camera, const Vector3& position) {
 	/// モデルの設定
-	model_ = model;
 	modelPlayer_ = Model::CreateFromOBJ("player4", true);
 	// modelPlayer_ = Model::CreateFromOBJ("skydome2", true);
 
@@ -15,7 +14,7 @@ void Player::Initialize(Model* model,  const Camera* camera, const Vector3& posi
 	/// カメラの設定
 	camera_ = camera;
 	/// テクスチャーハンドルの設定
-	//textureHandle_ = textureHandle;
+	// textureHandle_ = textureHandle;
 
 	/// ワールドトランスフォームの初期化
 	// 初期回転
@@ -25,6 +24,32 @@ void Player::Initialize(Model* model,  const Camera* camera, const Vector3& posi
 
 Player::~Player() {
 	// delete modelPlayer_;
+}
+
+void Player::UpdateForTitle() {
+	titleWalkTimer_++;
+	worldTransform_.translation_.y += 0.01f * std::sin(2.0f * 3.14f * titleWalkTimer_ / 180.0f);
+	worldTransform_.rotation_.y += 1.5f * (3.14f / 180.0f);
+
+	{
+		// アフィン変換
+		Matrix4x4 mS = MakeScaleMatrixM(worldTransform_.scale_);
+		Matrix4x4 mR = MakeRotateMatrixM(MakeRotateXMatrixM(worldTransform_.rotation_.x), MakeRotateYMatrixM(worldTransform_.rotation_.y), MakeRotateZMatrixM(worldTransform_.rotation_.z));
+
+		Matrix4x4 mT = MakeTranslateMatrixM(worldTransform_.translation_);
+
+		worldTransform_.matWorld_ = MultM(mS, MultM(mR, mT));
+	}
+
+	// ワールドトランスフォームの更新
+	worldTransform_.TransferMatrix();
+
+	///// ImGuiのデバッグウィンドウ
+	//ImGui::Begin("Debug");
+	//// ImGui::Checkbox("DebugCamera", &useDebugCamera);
+	//ImGui::SliderFloat3("worldTransform_,translation_", &worldTransform_.translation_.x, -50, 50);
+	//ImGui::SliderFloat3("worldTransform_,rotation_", &worldTransform_.rotation_.x, 0, 10);
+	//ImGui::End();
 }
 
 void Player::Update() {
@@ -55,12 +80,12 @@ void Player::Update() {
 	// ワールドトランスフォームの更新
 	worldTransform_.TransferMatrix();
 
-	/// ImGuiのデバッグウィンドウ
-	ImGui::Begin("Debug");
-	// ImGui::Checkbox("DebugCamera", &useDebugCamera);
-	ImGui::SliderFloat2("worldTransform_,translation_", &worldTransform_.translation_.x, 1, 50);
-	ImGui::SliderFloat2("worldTransform_,rotation_", &worldTransform_.rotation_.x, 0, 10);
-	ImGui::End();
+	///// ImGuiのデバッグウィンドウ
+	//ImGui::Begin("Debug");
+	//// ImGui::Checkbox("DebugCamera", &useDebugCamera);
+	//ImGui::SliderFloat2("worldTransform_,translation_", &worldTransform_.translation_.x, 1, 50);
+	//ImGui::SliderFloat2("worldTransform_,rotation_", &worldTransform_.rotation_.x, 0, 10);
+	//ImGui::End();
 }
 
 void Player::Render() {
@@ -69,29 +94,30 @@ void Player::Render() {
 	// assert(textureHandle_ != 0u);
 	/// モデルの描画
 	// model_->Draw(worldTransform_, *camera_, textureHandle_);
-	modelPlayer_->Draw(worldTransform_, *camera_);
-}
-
-void Player::OnCollision(const Enemy* enemy) { 
-	(void)enemy;
-	/// ジャンプ開始(仮処理)
-	{
-		velocity_.y += 3.0f;
+	if (!isDead_) {
+		modelPlayer_->Draw(worldTransform_, *camera_);
 	}
 }
 
-Vector3 Player::GetWorldPosition() { 
+void Player::OnCollision(const Enemy* enemy) {
+	(void)enemy;
+	/// ジャンプ開始(仮処理)
+	{
+		isDead_ = true;
+	}
+}
+
+Vector3 Player::GetWorldPosition() {
 	Vector3 worldPos;
 	worldPos.x = worldTransform_.matWorld_.m[3][0];
 	worldPos.y = worldTransform_.matWorld_.m[3][1];
 	worldPos.z = worldTransform_.matWorld_.m[3][2];
-	return worldPos; 
-
+	return worldPos;
 }
 
-AABB Player::GetAABB() { 
-	Vector3 worldPos = GetWorldPosition();	
-	
+AABB Player::GetAABB() {
+	Vector3 worldPos = GetWorldPosition();
+
 	AABB aabb;
 
 	aabb.min = {worldPos.x - kPlayerWidth / 2.0f, worldPos.y - kPlayerHeight / 2.0f, worldPos.z - kPlayerWidth / 2.0f};
@@ -309,11 +335,11 @@ void Player::MapCollisionDecideDown(CollisionMapInfo& info) {
 		indexSet = mapChipField_->GetMapChipIndexByPosition(positionsNew[kLeftBottom]);
 		MapChipField::IndexSet indexSetNow = mapChipField_->GetMapChipIndexByPosition(worldTransform_.translation_);
 		if (indexSetNow.yIndex != indexSet.yIndex) {
-		// めり込み先ブロックの矩形取得
-		MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSet.xIndex, indexSet.yIndex);
-		info.moveVector.y = std::max(0.0f, rect.top - (kPlayerHeight / 2.0f) - worldTransform_.translation_.y);
-		// 床判定であることを記録する
-		info.floorHit = true;
+			// めり込み先ブロックの矩形取得
+			MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSet.xIndex, indexSet.yIndex);
+			info.moveVector.y = std::max(0.0f, rect.top - (kPlayerHeight / 2.0f) - worldTransform_.translation_.y);
+			// 床判定であることを記録する
+			info.floorHit = true;
 		}
 	}
 }

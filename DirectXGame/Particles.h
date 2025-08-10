@@ -24,6 +24,8 @@ public:
 	void Update();
 	void Draw();
 
+	bool IsFinished() { return isFinished_; }
+
 private:
 	/// 単独モデル
 	Model* model_ = nullptr;
