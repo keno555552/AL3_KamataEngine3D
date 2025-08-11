@@ -7,13 +7,16 @@ using namespace KamataEngine;
 #include "Particles.h"
 #include "Player.h"
 #include "Skydome.h"
+#include "Effect.h"
 #include "myMathForAL.h"
 #include <vector>
 
 /// ゲームのフェイズ(型)
 enum class Phase {
+	kFadeIn,
 	kPlay,
 	kDeath,
+	kFadeOut,
 };
 
 class GameScene {
@@ -61,6 +64,8 @@ private:
 	bool finished_ = false;
 
 private:
+	Fade* fade_ = new Fade();
+
 	/// スカイドーム
 	Skydome* skydome_ = new Skydome;
 

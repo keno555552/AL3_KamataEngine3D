@@ -94,6 +94,9 @@ void GameScene::Initialize() {
 	/// 追従カメラの初期化
 	cameraController_->SetTarget(player_);
 
+	fade_->Initialze(1280, 720);
+	fade_->Start(Fade::Status::FadeIn, 1.0f);
+
 #pragma endregion
 }
 
@@ -121,6 +124,8 @@ GameScene::~GameScene() {
 
 	delete deathParticles_, deathParticles_ = nullptr;
 
+	delete fade_, fade_ = nullptr;
+
 #pragma endregion
 }
 
@@ -130,6 +135,8 @@ void GameScene::Update() {
 	debugCamera_->Update();
 	/// 追従カメラの更新
 	cameraController_->Update();
+
+	fade_->Update();
 
 #pragma endregion
 
@@ -228,6 +235,12 @@ void GameScene::Update() {
 		CheckAllCollisions();
 
 		if (deathParticles_ && deathParticles_->IsFinished()) {
+			if(fade_->GetStatus() != Fade::Status::FadeOut){
+				fade_->Start(Fade::Status::FadeOut, 1.0f);
+			}
+		}
+
+		if (fade_->IsFinished()) {
 			finished_ = true;
 		}
 
@@ -301,6 +314,9 @@ void GameScene::Render() {
 	// Sprite::PreDraw(dxCommon->GetCommandList());
 	//// 2D描画の後処理
 	// Sprite::PostDraw();
+
+	fade_->Draw(dxCommon);
+
 #pragma endregion
 }
 

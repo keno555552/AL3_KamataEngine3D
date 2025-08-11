@@ -18,19 +18,7 @@ void TitleWord::Initialize(const Camera* camera, const Vector3& position) {
 
 void TitleWord::Update() {
 	sprite_->SetPosition({worldTransform_.translation_.x, worldTransform_.translation_.y});
-	//{
-	//	// アフィン変換
-	//	Matrix4x4 mS = MakeScaleMatrixM(worldTransform_.scale_);
-	//	Matrix4x4 mR = MakeRotateMatrixM(MakeRotateXMatrixM(worldTransform_.rotation_.x), MakeRotateYMatrixM(worldTransform_.rotation_.y), MakeRotateZMatrixM(worldTransform_.rotation_.z));
-	//
-	//	Matrix4x4 mT = MakeTranslateMatrixM(worldTransform_.translation_);
-	//
-	//	worldTransform_.matWorld_ = MultM(mS, MultM(mR, mT));
-	//}
-	//
-	//// ワールドトランスフォームの更新
-	//worldTransform_.TransferMatrix();
-	//
+
 	/////// ImGuiのデバッグウィンドウ
 	//ImGui::Begin("Debug");
 	//// ImGui::Checkbox("DebugCamera", &useDebugCamera);

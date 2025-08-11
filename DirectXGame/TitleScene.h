@@ -5,9 +5,20 @@ using namespace KamataEngine;
 #include "Player.h"
 #include "Skydome.h"
 #include "TitleWord.h"
+#include "Effect.h"
+
+
 
 class TitleScene {
 public:
+	enum class Phase {
+		kFadeIn,
+		kMain,
+		kFadeOut,
+	};
+
+public:
+	~TitleScene();
 	void Initialize();
 	void Update();
 	void Draw();
@@ -19,7 +30,11 @@ private:
 	/// 終了フラグ
 	bool finished_ = false;
 
+	Phase phase_ = Phase::kFadeIn;
+
 private:
+	Fade* fade_ = new Fade();
+
 	/// スカイドーム
 	Skydome* skydome_ = new Skydome;
 
@@ -31,4 +46,5 @@ private:
 
 	///
 	TitleWord* titleWord_ = new TitleWord;
+
 };

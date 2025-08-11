@@ -7,7 +7,7 @@ using namespace KamataEngine;
 
 class TitleWord {
 public:
-	~TitleWord();
+	/// ~TitleWord();
 	/// 初期化
 	void Initialize(const Camera* camera, const Vector3& position);
 	/// 更新
