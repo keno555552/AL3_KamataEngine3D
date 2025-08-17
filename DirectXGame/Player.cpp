@@ -5,12 +5,15 @@
 
 void Player::Initialize(const Camera* camera, const Vector3& position) {
 	/// モデルの設定
-	modelPlayer_ = Model::CreateFromOBJ("player4", true);
-	// modelPlayer_ = Model::CreateFromOBJ("skydome2", true);
+	model_ = Model::CreateFromOBJ("player4", true);
+	attackEffectModel_ = Model::CreateFromOBJ("attackEffect", true);
 
 	/// ワールドトランスフォームの初期化
 	worldTransform_.Initialize();
 	worldTransform_.translation_ = position;
+	attackEffectWorldTransform_.Initialize();
+	attackEffectWorldTransform_.translation_ = worldTransform_.translation_;
+
 	/// カメラの設定
 	camera_ = camera;
 	/// テクスチャーハンドルの設定
@@ -23,6 +26,7 @@ void Player::Initialize(const Camera* camera, const Vector3& position) {
 }
 
 Player::~Player() {
+	delete model_, model_ = nullptr;
 	// delete modelPlayer_;
 }
 
@@ -45,15 +49,156 @@ void Player::UpdateForTitle() {
 	worldTransform_.TransferMatrix();
 
 	///// ImGuiのデバッグウィンドウ
-	//ImGui::Begin("Debug");
+	// ImGui::Begin("Debug");
 	//// ImGui::Checkbox("DebugCamera", &useDebugCamera);
-	//ImGui::SliderFloat3("worldTransform_,translation_", &worldTransform_.translation_.x, -50, 50);
-	//ImGui::SliderFloat3("worldTransform_,rotation_", &worldTransform_.rotation_.x, 0, 10);
-	//ImGui::End();
+	// ImGui::SliderFloat3("worldTransform_,translation_", &worldTransform_.translation_.x, -50, 50);
+	// ImGui::SliderFloat3("worldTransform_,rotation_", &worldTransform_.rotation_.x, 0, 10);
+	// ImGui::End();
 }
 
 void Player::Update() {
 
+	if (Input::GetInstance()->PushKey(DIK_SPACE)) {
+		if (Input::GetInstance()->PushKey(DIK_LEFT) || Input::GetInstance()->PushKey(DIK_RIGHT)) {
+			behaviorRequest_ = Behavior::kAttack;
+		}
+	}
+
+	if (behaviorRequest_ != Behavior::kUnknown) { // ① 振るまいリクエストが有効なら処理開始
+		// 振るまいを変更する
+		behavior_ = behaviorRequest_; // ② リクエストされた振るまいに切り替え
+
+		// 各振るまいごとの初期化を実行
+		switch (behavior_) {
+		case Behavior::kRoot:
+		default:
+			break;
+		case Behavior::kAttack:
+			attackParameter_ = 0;
+			attackPhase_ = AttackPhase::sink;
+			break;
+		}
+		// 振るまいリクエストをリセット
+		behaviorRequest_ = Behavior::kUnknown;
+	}
+
+	switch (behavior_) {
+	case Behavior::kRoot:
+	default:
+		break;
+	case Behavior::kAttack:
+		attackParameter_++;
+
+		attackEffectWorldTransform_.translation_ = worldTransform_.translation_;
+
+		switch (attackPhase_) {
+		case AttackPhase::sink:
+		default: {
+			float t = static_cast<float>((float)attackParameter_) / 2.0f;
+			worldTransform_.scale_.z = Lerp(1.0f, 0.3f, t);
+			worldTransform_.scale_.y = Lerp(1.0f, 1.3f, t);
+			if (attackParameter_ >= 5.0f) {
+				attackPhase_ = AttackPhase::lunge;
+				attackParameter_ = 0;
+			}
+		} break;
+
+		case AttackPhase::lunge: {
+			float t = static_cast<float>((float)attackParameter_) / 6.0f;
+			worldTransform_.scale_.z = Lerp(0.3f, 1.3f, t);
+			worldTransform_.scale_.y = Lerp(1.3f, 0.7f, t);
+
+			if (Input::GetInstance()->PushKey(DIK_LEFT)) {
+				velocity_.x = -0.8f;
+				attackEffectWorldTransform_.rotation_.z = 180.0f * 3.14f/180.0f;
+			}
+			if (Input::GetInstance()->PushKey(DIK_RIGHT)) {
+				velocity_.x = 0.8f;
+				attackEffectWorldTransform_.rotation_.z = 0.0f;
+			}
+
+			if (attackParameter_ >= 6.0f) {
+				attackPhase_ = AttackPhase::afterglow;
+				attackParameter_ = 0;
+			}
+		} break;
+
+		case AttackPhase::afterglow:
+			float t = static_cast<float>((float)attackParameter_) / 2.0f;
+			worldTransform_.scale_.z = Lerp(1.3f, 1.0f, t);
+			worldTransform_.scale_.y = Lerp(0.7f, 1.0f, t);
+
+			if (attackParameter_ >= 2.0f) {
+				behaviorRequest_ = Behavior::kRoot;
+			}
+			break;
+		}
+		velocity_.y = 0;
+
+		if (Input::GetInstance()->PushKey(DIK_LEFT)) {
+			if (lrDirection_ != LRDirection::kLeft) {
+				lrDirection_ = LRDirection::kLeft;
+				turnFirstRotationY_ = worldTransform_.rotation_.y;
+				turnTimer_ = kTimeTurn;
+			}
+		}
+		if (Input::GetInstance()->PushKey(DIK_RIGHT)) {
+			if (lrDirection_ != LRDirection::kRight) {
+				lrDirection_ = LRDirection::kRight;
+				turnFirstRotationY_ = worldTransform_.rotation_.y;
+				turnTimer_ = kTimeTurn;
+			}
+		}
+
+		break;
+	}
+
+	BehaviorRootUpdate();
+
+	// アフィン変換
+	Matrix4x4 mS = MakeScaleMatrixM(worldTransform_.scale_);
+	Matrix4x4 mR = MakeRotateMatrixM(MakeRotateXMatrixM(worldTransform_.rotation_.x), MakeRotateYMatrixM(worldTransform_.rotation_.y), MakeRotateZMatrixM(worldTransform_.rotation_.z));
+	Matrix4x4 mT = MakeTranslateMatrixM(worldTransform_.translation_);
+	worldTransform_.matWorld_ = MultM(mS, MultM(mR, mT));
+
+	// ワールドトランスフォームの更新
+	worldTransform_.TransferMatrix();
+
+	/// エフェクト
+	// アフィン変換
+	mS = MakeScaleMatrixM(attackEffectWorldTransform_.scale_);
+	mR = MakeRotateMatrixM(
+	    MakeRotateXMatrixM(attackEffectWorldTransform_.rotation_.x), MakeRotateYMatrixM(attackEffectWorldTransform_.rotation_.y), MakeRotateZMatrixM(attackEffectWorldTransform_.rotation_.z));
+	mT = MakeTranslateMatrixM(attackEffectWorldTransform_.translation_);
+	attackEffectWorldTransform_.matWorld_ = MultM(mS, MultM(mR, mT));
+
+	// ワールドトランスフォームの更新
+	attackEffectWorldTransform_.TransferMatrix();
+
+	///// ImGuiのデバッグウィンドウ
+	// ImGui::Begin("Debug");
+	//// ImGui::Checkbox("DebugCamera", &useDebugCamera);
+	// ImGui::SliderFloat2("worldTransform_,translation_", &worldTransform_.translation_.x, 1, 50);
+	// ImGui::SliderFloat2("worldTransform_,rotation_", &worldTransform_.rotation_.x, 0, 10);
+	// ImGui::End();
+}
+
+void Player::Render() {
+	// assert(camera_ != nullptr);
+	// assert(model_ != nullptr);
+	// assert(textureHandle_ != 0u);
+	/// モデルの描画
+	// model_->Draw(worldTransform_, *camera_, textureHandle_);
+	if (!isDead_)									model_->Draw(worldTransform_, *camera_);
+	if (behavior_ == Behavior::kAttack) {
+		if (attackPhase_ == AttackPhase::lunge)		attackEffectModel_->Draw(attackEffectWorldTransform_, *camera_);
+		if (attackPhase_ == AttackPhase::afterglow)	attackEffectModel_->Draw(attackEffectWorldTransform_, *camera_);
+	}
+}
+
+void Player::BehaviorAttackInitialize() { attackParameter_ = 0; }
+
+void Player::BehaviorRootUpdate() {
 	/// 衝突情報を初期化
 	CollisionMapInfo collisionMapInfo;
 	/// 移動量に速度の値をコピー
@@ -66,37 +211,6 @@ void Player::Update() {
 	OnGroundChanger(collisionMapInfo);
 	ceilingCollistionResult(collisionMapInfo);
 	WallCollistionAction(collisionMapInfo);
-
-	{
-		// アフィン変換
-		Matrix4x4 mS = MakeScaleMatrixM(worldTransform_.scale_);
-		Matrix4x4 mR = MakeRotateMatrixM(MakeRotateXMatrixM(worldTransform_.rotation_.x), MakeRotateYMatrixM(worldTransform_.rotation_.y), MakeRotateZMatrixM(worldTransform_.rotation_.z));
-
-		Matrix4x4 mT = MakeTranslateMatrixM(worldTransform_.translation_);
-
-		worldTransform_.matWorld_ = MultM(mS, MultM(mR, mT));
-	}
-
-	// ワールドトランスフォームの更新
-	worldTransform_.TransferMatrix();
-
-	///// ImGuiのデバッグウィンドウ
-	//ImGui::Begin("Debug");
-	//// ImGui::Checkbox("DebugCamera", &useDebugCamera);
-	//ImGui::SliderFloat2("worldTransform_,translation_", &worldTransform_.translation_.x, 1, 50);
-	//ImGui::SliderFloat2("worldTransform_,rotation_", &worldTransform_.rotation_.x, 0, 10);
-	//ImGui::End();
-}
-
-void Player::Render() {
-	// assert(camera_ != nullptr);
-	// assert(model_ != nullptr);
-	// assert(textureHandle_ != 0u);
-	/// モデルの描画
-	// model_->Draw(worldTransform_, *camera_, textureHandle_);
-	if (!isDead_) {
-		modelPlayer_->Draw(worldTransform_, *camera_);
-	}
 }
 
 void Player::OnCollision(const Enemy* enemy) {
@@ -193,10 +307,12 @@ void Player::Move() {
 		if (velocity_.x < 0.01f && velocity_.x > -0.01f) {
 			velocity_.x = 0.0f;
 		}
-		if (lrDirection_ != LRDirection::None) {
-			lrDirection_ = LRDirection::None;
-			turnFirstRotationY_ = worldTransform_.rotation_.y;
-			turnTimer_ = kTimeTurn;
+		if (behavior_ != Behavior::kAttack) {
+			if (lrDirection_ != LRDirection::None) {
+				lrDirection_ = LRDirection::None;
+				turnFirstRotationY_ = worldTransform_.rotation_.y;
+				turnTimer_ = kTimeTurn;
+			}
 		}
 	}
 

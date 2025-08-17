@@ -13,6 +13,10 @@ Vector3 Lerp(Vector3 a, Vector3 b, float t) {
 	return result;
 }
 
+float Lerp(float a, float b, float t) { 
+	return (a + (b - a) * t); 
+}
+
 Matrix4x4 MultM(const Matrix4x4& m1, const Matrix4x4& m2) {
 	Matrix4x4 resuit = {};
 	for (int i = 0; i < 4; i++) {

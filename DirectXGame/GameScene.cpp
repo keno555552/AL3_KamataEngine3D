@@ -183,7 +183,7 @@ void GameScene::Update() {
 			}
 		}
 
-		CheckAllCollisions();
+		//CheckAllCollisions();
 
 		if (player_->GetStateDead()) {
 			/// 死亡演出フェーズに切り替え

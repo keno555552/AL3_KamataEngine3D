@@ -15,14 +15,18 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	/// DirectXの初期化
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
-	Scene scene = Scene::kTitle;
+	//Scene scene = Scene::kTitle;
+	Scene scene = Scene::kGame;
 
 	/// TitleSceneの生成まだわ初期化
-	TitleScene* titleScene = new TitleScene;
-	titleScene->Initialize();
+	TitleScene* titleScene = nullptr;
+	//TitleScene* titleScene = new TitleScene;
+	//titleScene->Initialize();
 
 	/// GameSceneの生成,そして待機
-	GameScene* gameScene = nullptr;
+	//GameScene* gameScene = nullptr;
+	GameScene* gameScene = new GameScene;
+	gameScene->Initialize();
 
 #pragma endregion
 

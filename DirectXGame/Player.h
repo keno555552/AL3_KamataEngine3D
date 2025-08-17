@@ -57,7 +57,7 @@ class Player {
 public:
 	~Player();
 	/// 初期化
-	void Initialize( const Camera* camera, const Vector3& position);
+	void Initialize(const Camera* camera, const Vector3& position);
 	/// 更新
 	void Update();
 	/// 更新(title描画用)
@@ -65,6 +65,10 @@ public:
 	/// 描画
 	void Render();
 
+	/// 行動関連
+	void BehaviorRootInitialize();
+	void BehaviorAttackInitialize();
+	void BehaviorRootUpdate();
 	void OnCollision(const Enemy* enemy);
 
 	/// 参照命令
@@ -94,14 +98,40 @@ private:
 	void ceilingCollistionResult(const CollisionMapInfo& info);
 
 private:
+	///// 振る舞い
+	enum class Behavior {
+		kUnknown = -1,	// リクエストのない
+		kRoot,			// 通常状態
+		kAttack,		// 攻撃中
+	};
+	Behavior behavior_ = Behavior::kRoot;
+	Behavior behaviorRequest_ = Behavior::kUnknown;
+
+	/// 攻撃
+	// 攻撃ギミックの経過時間カウンター
+	int attackParameter_ = 0;
+	enum class AttackPhase { 
+		none,				// アタックではない
+		sink,				// 溜め
+		lunge,				// 突進
+		afterglow,			// 余韻
+	};
+	AttackPhase attackPhase_ = AttackPhase::none;
+
+
+private:
 	///// モデル
 	Model* model_ = nullptr;
 
-	/// 単独モデル
-	Model* modelPlayer_ = nullptr;
-
 	/// ワールドトランスフォーム
 	WorldTransform worldTransform_;
+
+	/// アタックエフェクトのモデル
+	Model* attackEffectModel_ = nullptr;
+
+	/// アタックエフェクトのモデルのワールドトランスフォーム
+	WorldTransform attackEffectWorldTransform_;
+
 	/// カメラ
 	const Camera* camera_ = nullptr;
 	/// テクスチャーハンドル
@@ -134,5 +164,4 @@ private:
 private:
 	// デスフラグ
 	bool isDead_ = false;
-
 };

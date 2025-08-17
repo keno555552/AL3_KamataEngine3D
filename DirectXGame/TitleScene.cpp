@@ -32,8 +32,10 @@ void TitleScene::Update() {
 	fade_->Update();
 
 	/// ステイシーチェンジ動作
-	if (Input::GetInstance()->PushKey(DIK_SPACE)) {
-		fade_->Start(Fade::Status::FadeOut, 1.0f);
+	if (fade_->GetStatus() != Fade::Status::FadeOut) {
+		if (Input::GetInstance()->PushKey(DIK_SPACE)) {
+			fade_->Start(Fade::Status::FadeOut, 1.0f);
+		}
 	}
 
 	if (fade_->IsFinished()) {
