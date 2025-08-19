@@ -58,7 +58,7 @@ void Player::UpdateForTitle() {
 
 void Player::Update() {
 
-	if (Input::GetInstance()->PushKey(DIK_SPACE)) {
+	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
 		if (Input::GetInstance()->PushKey(DIK_LEFT) || Input::GetInstance()->PushKey(DIK_RIGHT)) {
 			behaviorRequest_ = Behavior::kAttack;
 		}
@@ -101,6 +101,7 @@ void Player::Update() {
 				attackPhase_ = AttackPhase::lunge;
 				attackParameter_ = 0;
 			}
+			velocity_.x = 0.0f;
 		} break;
 
 		case AttackPhase::lunge: {
@@ -110,7 +111,7 @@ void Player::Update() {
 
 			if (Input::GetInstance()->PushKey(DIK_LEFT)) {
 				velocity_.x = -0.8f;
-				attackEffectWorldTransform_.rotation_.z = 180.0f * 3.14f/180.0f;
+				attackEffectWorldTransform_.rotation_.z = 180.0f * 3.14f / 180.0f;
 			}
 			if (Input::GetInstance()->PushKey(DIK_RIGHT)) {
 				velocity_.x = 0.8f;
@@ -189,12 +190,17 @@ void Player::Render() {
 	// assert(textureHandle_ != 0u);
 	/// モデルの描画
 	// model_->Draw(worldTransform_, *camera_, textureHandle_);
-	if (!isDead_)									model_->Draw(worldTransform_, *camera_);
+	if (!isDead_)
+		model_->Draw(worldTransform_, *camera_);
 	if (behavior_ == Behavior::kAttack) {
-		if (attackPhase_ == AttackPhase::lunge)		attackEffectModel_->Draw(attackEffectWorldTransform_, *camera_);
-		if (attackPhase_ == AttackPhase::afterglow)	attackEffectModel_->Draw(attackEffectWorldTransform_, *camera_);
+		if (attackPhase_ == AttackPhase::lunge)
+			attackEffectModel_->Draw(attackEffectWorldTransform_, *camera_);
+		if (attackPhase_ == AttackPhase::afterglow)
+			attackEffectModel_->Draw(attackEffectWorldTransform_, *camera_);
 	}
 }
+
+void Player::BehaviorRootInitialize() {}
 
 void Player::BehaviorAttackInitialize() { attackParameter_ = 0; }
 
@@ -213,12 +219,9 @@ void Player::BehaviorRootUpdate() {
 	WallCollistionAction(collisionMapInfo);
 }
 
-void Player::OnCollision(const Enemy* enemy) {
+void Player::OnCollision(Enemy* enemy) {
 	(void)enemy;
-	/// ジャンプ開始(仮処理)
-	{
-		isDead_ = true;
-	}
+	isDead_ = true;
 }
 
 Vector3 Player::GetWorldPosition() {

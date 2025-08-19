@@ -19,6 +19,11 @@ static inline const float kWalkMotionAngleEnd = 30.0f;
 /// アニメーションの周期とその時間[秒]
 static inline const float kWSalkMotionTime = 2.0f;
 
+///// デスアニメーション
+static inline const float kDeadAnimationTime = 1.0f;
+static inline const float kDeadAnimationAnglie = 360.0f * 2.0f + 90.0f;
+
+
 /// <summary>
 /// 敵
 /// </summary>
@@ -35,6 +40,28 @@ public:
 
 	Vector3 GetWorldPosition();
 	AABB GetAABB();
+	bool GetStateDead() const { return isDead_; }
+	bool GetStateAttackEffectFinished() const { return deadEffectFinished_; }
+
+private:
+	///// 振る舞い
+	enum class Behavior {
+		kUnknown = -1, // リクエストのない
+		kRoot,         // 通常状態
+		kDead,       // 攻撃中
+	};
+	Behavior behavior_ = Behavior::kRoot;
+	Behavior behaviorRequest_ = Behavior::kUnknown;
+
+	/// 攻撃
+	// 攻撃ギミックの経過時間カウンター
+	int deadEffectParameter_ = 0;
+	enum class DeadPhase {
+		none,		// アタックではない
+		rotate,     // 溜め
+		finsih,		// 余韻
+	};
+	DeadPhase deadPhase_ = DeadPhase::none;
 
 private:
 	/// 単独モデル
@@ -47,4 +74,8 @@ private:
 	Vector3 velocity_ = {};
 	/// 経過時間
 	float walkTimer_ = 0.0f;
+
+private:
+	bool isDead_ = false;
+	bool deadEffectFinished_ = false;
 };

@@ -10,6 +10,10 @@ Vector3 Lerp(Vector3 a, Vector3 b, float t);
 
 float Lerp(float a, float b, float t);
 
+float easyIn(float a, float b, float t, float r);
+
+float easyOut(float a, float b, float t, float r);
+
 Matrix4x4 MultM(const Matrix4x4& m1, const Matrix4x4& m2);
 
 /// <summary>

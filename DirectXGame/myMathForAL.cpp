@@ -17,6 +17,16 @@ float Lerp(float a, float b, float t) {
 	return (a + (b - a) * t); 
 }
 
+float easyIn(float a, float b, float t, float r) {
+	float eased = powf(t, r);
+	return Lerp(a,b,eased);
+}
+
+float easyOut(float a, float b, float t, float r) {
+	float eased = 1.0f - powf(1.0f - t, r);
+	return Lerp(a,b,eased);
+}
+
 Matrix4x4 MultM(const Matrix4x4& m1, const Matrix4x4& m2) {
 	Matrix4x4 resuit = {};
 	for (int i = 0; i < 4; i++) {

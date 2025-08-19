@@ -156,10 +156,18 @@ void GameScene::Update() {
 
 		/// Enemy関連
 		if (!enemyGroup_.empty()) {
-			for (auto ptr : enemyGroup_) {
-				ptr->Update();
+			for (auto enemy : enemyGroup_) {
+				enemy->Update();
 			}
 		}
+
+		enemyGroup_.remove_if([](Enemy* enemy) {
+			if (enemy->GetStateAttackEffectFinished()) {
+				delete enemy, enemy = nullptr;
+				return true;
+			}
+			return false;
+		});
 
 		/// ボックスの更新
 		for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
@@ -183,7 +191,7 @@ void GameScene::Update() {
 			}
 		}
 
-		//CheckAllCollisions();
+		CheckAllCollisions();
 
 		if (player_->GetStateDead()) {
 			/// 死亡演出フェーズに切り替え
@@ -235,7 +243,7 @@ void GameScene::Update() {
 		CheckAllCollisions();
 
 		if (deathParticles_ && deathParticles_->IsFinished()) {
-			if(fade_->GetStatus() != Fade::Status::FadeOut){
+			if (fade_->GetStatus() != Fade::Status::FadeOut) {
 				fade_->Start(Fade::Status::FadeOut, 1.0f);
 			}
 		}
@@ -327,17 +335,31 @@ void GameScene::CheckAllCollisions() {
 
 	/// 自キャラの座標
 	aabb1 = player_->GetAABB();
+	if (!player_->GetStateAttack()) {
+		/// 自キャラと敵弾全ての当たり判定
+		if (!enemyGroup_.empty()) {
+			for (Enemy* enemy : enemyGroup_) {
+				if (enemy->GetStateDead())continue;
+				/// 敵弾の座標
+				aabb2 = enemy->GetAABB();
 
-	/// 自キャラと敵弾全ての当たり判定
-	if (!enemyGroup_.empty()) {
-		for (Enemy* enemy : enemyGroup_) {
-			/// 敵弾の座標
-			aabb2 = enemy->GetAABB();
+				if (crashDecision(aabb1, aabb2)) {
+					/// 自キャラの衝突時関数を呼び出す
+					player_->OnCollision(enemy);
+				}
+			}
+		}
+	} else {
+		/// 自キャラと敵弾全ての当たり判定
+		if (!enemyGroup_.empty()) {
+			for (Enemy* enemy : enemyGroup_) {
+				/// 敵弾の座標
+				aabb2 = enemy->GetAABB();
 
-			if (crashDecision(aabb1, aabb2)) {
-				/// 自キャラの衝突時関数を呼び出す
-				player_->OnCollision(enemy);
-				enemy->OnCollision(player_);
+				if (crashDecision(aabb1, aabb2)) {
+					/// 自キャラの衝突時関数を呼び出す
+					enemy->OnCollision(player_);
+				}
 			}
 		}
 	}
@@ -345,6 +367,7 @@ void GameScene::CheckAllCollisions() {
 #pragma region 自キャラとアイテムの当たり判定
 #pragma endregion
 #pragma region 自弾と敵キャラの当たり判定
+
 #pragma endregion
 }
 

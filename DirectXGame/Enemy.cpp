@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <numbers>
 
-
 void Enemy::Initialize(const Camera* camera, const Vector3& position) {
 	/// モデルの設定
 	model_ = Model::CreateFromOBJ("enemy", true);
@@ -26,19 +25,70 @@ void Enemy::Initialize(const Camera* camera, const Vector3& position) {
 
 void Enemy::Update() {
 
-	/// 移動
-	worldTransform_.translation_.x += velocity_.x;
-	worldTransform_.translation_.y += velocity_.y;
-	worldTransform_.translation_.z += velocity_.z;
+	if (isDead_ && (deadPhase_ == DeadPhase::none)) {
+		behaviorRequest_ = Behavior::kDead;
+	}
 
-	/// タイマーを加算
-	walkTimer_ += 1.0f / 60.0f;
+	if (behaviorRequest_ != Behavior::kUnknown) { // ① 振るまいリクエストが有効なら処理開始
+		// 振るまいを変更する
+		behavior_ = behaviorRequest_; // ② リクエストされた振るまいに切り替え
 
-	/// 回転アニメーション
-	float param = std::sin(2.0f * 3.14f * walkTimer_ / (kWSalkMotionTime));
-	float degree = kWalkMotionAngleStart + kWalkMotionAngleEnd * (param + 1.0f) / 2.0f;
-	worldTransform_.rotation_.z = degree * (3.14f / 180.0f);
-		
+		// 各振るまいごとの初期化を実行
+		switch (behavior_) {
+		case Behavior::kRoot:
+		default:
+			break;
+		case Behavior::kDead:
+			deadEffectParameter_ = 0;
+			deadPhase_ = DeadPhase::rotate;
+			break;
+		}
+		// 振るまいリクエストをリセット
+		behaviorRequest_ = Behavior::kUnknown;
+	}
+
+	switch (behavior_) {
+	case Behavior::kRoot:
+	default:
+		/// 移動
+		worldTransform_.translation_.x += velocity_.x;
+		worldTransform_.translation_.y += velocity_.y;
+		worldTransform_.translation_.z += velocity_.z;
+
+		/// タイマーを加算
+		walkTimer_ += 1.0f / 60.0f;
+
+		{
+			/// 回転アニメーション
+			float param = std::sin(2.0f * 3.14f * walkTimer_ / (kWSalkMotionTime));
+			float degree = kWalkMotionAngleStart + kWalkMotionAngleEnd * (param + 1.0f) / 2.0f;
+			worldTransform_.rotation_.z = degree * (3.14f / 180.0f);
+		}
+
+		break;
+	case Behavior::kDead:
+		switch (deadPhase_) {
+		case DeadPhase::rotate:
+		default: {
+			deadEffectParameter_++;
+			float time = float(kDeadAnimationTime * 60.0f);
+			float degree = easyOut(0.0f, kDeadAnimationAnglie, (deadEffectParameter_ / time), 3.0f);
+			//float degree = 0.0f + kDeadAnimationAnglie * (deadEffectParameter_ / time);
+			worldTransform_.rotation_.z = 0.0f;
+			worldTransform_.rotation_.y = degree * (3.14f / 180.0f);
+
+			if (deadEffectParameter_ >= time) {
+				deadPhase_ = DeadPhase::finsih;
+			}
+		}
+
+		break;
+		case DeadPhase::finsih:
+			deadEffectFinished_ = true;
+			break;
+		}
+		break;
+	}
 
 	{
 		// アフィン変換
@@ -54,19 +104,21 @@ void Enemy::Update() {
 	worldTransform_.TransferMatrix();
 
 	///// ImGuiのデバッグウィンドウ
-	//ImGui::Begin("Debug2");
+	// ImGui::Begin("Debug2");
 	//// ImGui::Checkbox("DebugCamera", &useDebugCamera);
-	//ImGui::SliderFloat("param", &param, 0,100);
-	//ImGui::End();
+	// ImGui::SliderFloat("param", &param, 0,100);
+	// ImGui::End();
 }
-
 
 void Enemy::Render() {
 	/// モデルの描画
 	model_->Draw(worldTransform_, *camera_);
 }
 
-void Enemy::OnCollision(const Player* player) { (void)player; }
+void Enemy::OnCollision(const Player* player) {
+	(void)player;
+	isDead_ = true;
+}
 
 Vector3 Enemy::GetWorldPosition() {
 	Vector3 worldPos;

@@ -69,7 +69,7 @@ public:
 	void BehaviorRootInitialize();
 	void BehaviorAttackInitialize();
 	void BehaviorRootUpdate();
-	void OnCollision(const Enemy* enemy);
+	void OnCollision(Enemy* enemy);
 
 	/// 参照命令
 	void SetMpChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
@@ -80,6 +80,7 @@ public:
 	const Vector3& GetVelocity() const { return velocity_; }
 	AABB GetAABB();
 	bool GetStateDead() const { return isDead_; }
+	bool GetStateAttack() const { return behavior_ == Behavior::kAttack; }
 
 private:
 	Vector3 CornerPosition(const Vector3& center, Corner corner);
