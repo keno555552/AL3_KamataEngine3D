@@ -2,12 +2,12 @@
 #include "KamataEngine.h"
 using namespace KamataEngine;
 #include "CameraController.h"
+#include "Effect.h"
 #include "Enemy.h"
 #include "MapChipField.h"
 #include "Particles.h"
 #include "Player.h"
 #include "Skydome.h"
-#include "Effect.h"
 #include "myMathForAL.h"
 #include <vector>
 
@@ -31,6 +31,8 @@ public:
 	/// 描画
 	void Render();
 
+public:
+	void CreateHitEffect(Vector3 pos);
 	/// 終了フラグのgetter
 	bool IsFinished() const { return finished_; }
 
@@ -76,10 +78,12 @@ private:
 
 	/// 自キャラ
 	std::list<Enemy*> enemyGroup_;
+	/// やられエフェクト
+	std::list<HitEffect*> hitEffect_;
 
 	/// マップチップ
 	MapChipField* mapChipField_ = nullptr;
 
-	/// 　ボックス
+	/// ボックス
 	std::vector<std::vector<WorldTransform*>> worldTransformBlocks_;
 };

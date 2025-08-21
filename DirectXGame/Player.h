@@ -76,7 +76,7 @@ public:
 
 	/// ワールドトランスフォーム取得
 	WorldTransform& GetWorldTransform() { return worldTransform_; }
-	Vector3 GetWorldPosition();
+	Vector3 GetWorldPosition() const;
 	const Vector3& GetVelocity() const { return velocity_; }
 	AABB GetAABB();
 	bool GetStateDead() const { return isDead_; }

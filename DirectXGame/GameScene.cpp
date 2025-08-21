@@ -77,7 +77,7 @@ void GameScene::Initialize() {
 	for (int i = 0; i < 3; i++) {
 		Enemy* enemy = new Enemy;
 		enemy->Initialize(&nowCamera, enemyStartPosition[i]);
-
+		enemy->SetGameScene(this);
 		enemyGroup_.push_back(enemy);
 	}
 
@@ -96,6 +96,16 @@ void GameScene::Initialize() {
 
 	fade_->Initialze(1280, 720);
 	fade_->Start(Fade::Status::FadeIn, 1.0f);
+
+#pragma endregion
+
+#pragma region Effect
+	{
+		Model* newModel_ = Model::CreateFromOBJ("alphaPlane", true);
+		// Model* newModel_ = Model::CreateFromOBJ("player4", true);
+		HitEffect::SetModel(newModel_);
+		HitEffect::SetCamera(&nowCamera);
+	}
 
 #pragma endregion
 }
@@ -125,6 +135,17 @@ GameScene::~GameScene() {
 	delete deathParticles_, deathParticles_ = nullptr;
 
 	delete fade_, fade_ = nullptr;
+
+#pragma endregion
+
+#pragma region Effect
+
+	if (!hitEffect_.empty()) {
+
+		for (auto ptr : hitEffect_) {
+			delete ptr, ptr = nullptr;
+		}
+	}
 
 #pragma endregion
 }
@@ -258,6 +279,26 @@ void GameScene::Update() {
 
 #pragma endregion
 
+#pragma region Effect
+
+	/// Enemy関連
+	if (!hitEffect_.empty()) {
+		hitEffect_.erase(
+		    std::remove_if(
+		        hitEffect_.begin(), hitEffect_.end(),
+		        [](HitEffect* ptr) {
+			        ptr->Update();
+			        if (ptr->IsFinished()) {
+				        delete ptr,ptr = nullptr;
+				        return true;
+			        }
+			        return false;
+		        }),
+		    hitEffect_.end());
+	}
+
+#pragma endregion
+
 #ifdef _DEBUG
 
 	//
@@ -307,6 +348,17 @@ void GameScene::Render() {
 		}
 	}
 
+#pragma region Effect
+
+	/// Enemy関連
+	if (!hitEffect_.empty()) {
+		for (auto ptr : hitEffect_) {
+			ptr->Draw();
+		}
+	}
+
+#pragma endregion
+
 	/// 後処理
 	Model::PostDraw();
 #pragma endregion
@@ -339,7 +391,8 @@ void GameScene::CheckAllCollisions() {
 		/// 自キャラと敵弾全ての当たり判定
 		if (!enemyGroup_.empty()) {
 			for (Enemy* enemy : enemyGroup_) {
-				if (enemy->GetStateDead())continue;
+				if (enemy->GetStateDead())
+					continue;
 				/// 敵弾の座標
 				aabb2 = enemy->GetAABB();
 
@@ -378,4 +431,9 @@ void GameScene::ChangePhase() {
 	case Phase::kDeath:
 		break;
 	}
+}
+
+void GameScene::CreateHitEffect(Vector3 pos) {
+	HitEffect* newHitEffect = HitEffect::Create(pos);
+	hitEffect_.push_back(newHitEffect);
 }

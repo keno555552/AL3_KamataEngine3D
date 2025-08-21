@@ -73,7 +73,7 @@ void Enemy::Update() {
 			deadEffectParameter_++;
 			float time = float(kDeadAnimationTime * 60.0f);
 			float degree = easyOut(0.0f, kDeadAnimationAnglie, (deadEffectParameter_ / time), 3.0f);
-			//float degree = 0.0f + kDeadAnimationAnglie * (deadEffectParameter_ / time);
+			// float degree = 0.0f + kDeadAnimationAnglie * (deadEffectParameter_ / time);
 			worldTransform_.rotation_.z = 0.0f;
 			worldTransform_.rotation_.y = degree * (3.14f / 180.0f);
 
@@ -115,8 +115,18 @@ void Enemy::Render() {
 	model_->Draw(worldTransform_, *camera_);
 }
 
-void Enemy::OnCollision(const Player* player) {
+void Enemy::OnCollision(const Player* player)  {
 	(void)player;
+	if (isDead_)return;
+	if (player->GetStateAttack()) {
+		behaviorRequest_ = Behavior::kDead;
+
+		Vector3 effectPos;
+		effectPos.x = (GetWorldPosition().x + player->GetWorldPosition().x)/2.0f;
+		effectPos.y = (GetWorldPosition().y + player->GetWorldPosition().y)/2.0f;
+		effectPos.z = (GetWorldPosition().z + player->GetWorldPosition().z)/2.0f;
+		gameScene_->CreateHitEffect(effectPos);
+	}
 	isDead_ = true;
 }
 

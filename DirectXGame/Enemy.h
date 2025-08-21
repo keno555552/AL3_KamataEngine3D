@@ -4,6 +4,8 @@ using namespace KamataEngine;
 #include "CameraController.h"
 #include "MapChipField.h"
 #include "myMathForAL.h"
+#include "GameScene.h"
+
 
 /// 歩きの速さ
 static inline const float kWalkSpeed = 0.05f;
@@ -28,6 +30,7 @@ static inline const float kDeadAnimationAnglie = 360.0f * 2.0f + 90.0f;
 /// 敵
 /// </summary>
 class Player;
+class GameScene;
 class Enemy {
 public:
 	void Initialize(const Camera* camera, const Vector3& position);
@@ -38,6 +41,7 @@ public:
 
 	void OnCollision(const Player* player);
 
+	void SetGameScene(GameScene* gameScene) { gameScene_ = gameScene; }
 	Vector3 GetWorldPosition();
 	AABB GetAABB();
 	bool GetStateDead() const { return isDead_; }
@@ -70,6 +74,8 @@ private:
 	WorldTransform worldTransform_;
 	/// カメラ
 	const Camera* camera_ = nullptr;
+	/// ゲームシーン
+	GameScene* gameScene_ = nullptr;
 	/// 速度
 	Vector3 velocity_ = {};
 	/// 経過時間
